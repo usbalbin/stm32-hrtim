@@ -1,10 +1,9 @@
-use crate::{
-    hrtim::fault::{
-        FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitor6, FltMonitorSys,
-    },
-    rcc::{Enable, Rcc, Reset},
-    stm32::{HRTIM_COMMON, RCC},
+use crate::fault::{
+    FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitor6, FltMonitorSys,
 };
+use crate::{hal, stm32};
+use hal::rcc::{Enable, Rcc, Reset};
+use stm32::{HRTIM_COMMON, RCC};
 
 use super::{external_event::EevInputs, fault::FaultInputs};
 
@@ -19,8 +18,8 @@ impl HrControltExt for HRTIM_COMMON {
         unsafe {
             let rcc_ptr = &*RCC::ptr();
 
-            HRTIM_COMMON::enable(rcc_ptr);
-            HRTIM_COMMON::reset(rcc_ptr);
+            <HRTIM_COMMON as Enable>::enable(rcc_ptr);
+            <HRTIM_COMMON as Reset>::reset(rcc_ptr);
         }
 
         // Start calibration procedure
@@ -257,15 +256,15 @@ macro_rules! impl_adc1234_trigger {
             }
         }
 
-        $(impl From<&$t> for crate::adc::config::ExternalTrigger12 {
+        $(impl From<&$t> for hal::adc::config::ExternalTrigger12 {
             fn from(_val: &$t) -> Self {
-                crate::adc::config::ExternalTrigger12::$variant12
+                hal::adc::config::ExternalTrigger12::$variant12
             }
         })*
 
-        impl From<&$t> for crate::adc::config::ExternalTrigger345 {
+        impl From<&$t> for hal::adc::config::ExternalTrigger345 {
             fn from(_val: &$t) -> Self {
-                crate::adc::config::ExternalTrigger345::$variant345
+                hal::adc::config::ExternalTrigger345::$variant345
             }
         }
     )*}
@@ -285,15 +284,15 @@ macro_rules! impl_adc5678910_trigger {
             }
         }
 
-        impl From<&$t> for crate::adc::config::ExternalTrigger12 {
+        impl From<&$t> for hal::adc::config::ExternalTrigger12 {
             fn from(_val: &$t) -> Self {
-                crate::adc::config::ExternalTrigger12::$variant12
+                hal::adc::config::ExternalTrigger12::$variant12
             }
         }
 
-        impl From<&$t> for crate::adc::config::ExternalTrigger345 {
+        impl From<&$t> for hal::adc::config::ExternalTrigger345 {
             fn from(_val: &$t) -> Self {
-                crate::adc::config::ExternalTrigger345::$variant345
+                hal::adc::config::ExternalTrigger345::$variant345
             }
         }
 

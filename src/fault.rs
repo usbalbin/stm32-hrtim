@@ -1,10 +1,11 @@
-use crate::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6};
-use crate::gpio::gpioa::{PA12, PA15};
-use crate::gpio::gpiob::{PB0, PB10, PB11};
-use crate::gpio::gpioc::{PC10, PC7};
-use crate::gpio::{self, AF13, AF3};
-use crate::hrtim::control::HrPwmControl;
-use crate::stm32::HRTIM_COMMON;
+use crate::control::HrPwmControl;
+use crate::hal;
+use hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6};
+use hal::gpio::gpioa::{PA12, PA15};
+use hal::gpio::gpiob::{PB0, PB10, PB11};
+use hal::gpio::gpioc::{PC10, PC7};
+use hal::gpio::{self, AF13, AF3};
+use hal::stm32::HRTIM_COMMON;
 
 use super::control::HrPwmCtrl;
 
@@ -94,7 +95,7 @@ macro_rules! impl_faults {
                 }
             )*
 
-            pub fn bind_comp(self, _comp: &crate::comparator::Comparator<$compX, crate::comparator::Enabled>) -> SourceBuilder<$input> {
+            pub fn bind_comp(self, _comp: &hal::comparator::Comparator<$compX, hal::comparator::Enabled>) -> SourceBuilder<$input> {
                 unsafe { SourceBuilder::new(self, 0b01) }
             }
 
@@ -127,7 +128,7 @@ macro_rules! impl_faults {
             }
 
             pub fn polarity(mut self, polarity: super::Polarity) -> Self {
-                self.is_active_high = polarity == super::Polarity::ActiveHigh;
+                self.is_active_high = matches!(polarity, super::Polarity::ActiveHigh);
                 self
             }
 

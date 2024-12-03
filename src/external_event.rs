@@ -1,9 +1,11 @@
-use crate::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6, COMP7};
-use crate::gpio::gpiob::{PB3, PB4, PB5, PB6, PB7, PB8, PB9};
-use crate::gpio::gpioc::{PC11, PC12, PC5, PC6};
-use crate::gpio::{self, AF13, AF3};
-use crate::pwm::Polarity;
-use crate::stm32::HRTIM_COMMON;
+use crate::{hal, stm32};
+
+use hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6, COMP7};
+use hal::gpio::gpiob::{PB3, PB4, PB5, PB6, PB7, PB8, PB9};
+use hal::gpio::gpioc::{PC11, PC12, PC5, PC6};
+use hal::gpio::{self, AF13, AF3};
+use hal::pwm::Polarity;
+use stm32::HRTIM_COMMON;
 
 use super::control::HrTimCalibrated;
 
@@ -61,15 +63,15 @@ macro_rules! impl_eev_input {
             }
         })*
 
-        unsafe impl<ED> EevSrcBits<$N> for &crate::comparator::Comparator<$compX, ED>
-            where ED: crate::comparator::EnabledState
+        unsafe impl<ED> EevSrcBits<$N> for &hal::comparator::Comparator<$compX, ED>
+            where ED: hal::comparator::EnabledState
         {
             const SRC_BITS: u8 = 0b01;
         }
 
         $(
-            unsafe impl<ED> EevSrcBits<$N> for &crate::comparator::Comparator<$compY, ED>
-                where ED: crate::comparator::EnabledState
+            unsafe impl<ED> EevSrcBits<$N> for &hal::comparator::Comparator<$compY, ED>
+                where ED: hal::comparator::EnabledState
             {
                 const SRC_BITS: u8 = $compY_src_bits;
             }
@@ -97,7 +99,7 @@ impl_eev_input!(8: COMP = [COMP6, (COMP3, 0b10)], PINS = [(PB8, AF13)]);
 impl_eev_input!(9: COMP = [COMP5, (COMP4, 0b11)], PINS = [(PB3, AF13)]);
 impl_eev_input!(10: COMP = [COMP7], PINS = [(PC5, AF13), (PC6, AF3)]);
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(/*Copy, Clone, Debug, PartialEq*/ )]
 pub enum EdgeOrPolarity {
     Edge(Edge),
     Polarity(Polarity),
