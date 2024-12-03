@@ -1,8 +1,10 @@
+use crate::{hal, stm32};
+
 use super::timer;
-use crate::dma::mux::DmaMuxResources;
-use crate::dma::traits::TargetAddress;
-use crate::dma::PeripheralToMemory;
-use crate::stm32::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF};
+use crate::mcu::DmaMuxResources;
+use hal::dma::traits::TargetAddress;
+use hal::dma::PeripheralToMemory;
+use stm32::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF};
 use core::marker::PhantomData;
 
 pub struct Ch1;

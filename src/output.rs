@@ -1,17 +1,16 @@
-use crate::stm32::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF};
+use crate::{
+    hal,
+    stm32::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF},
+};
 use core::marker::PhantomData;
 
 use super::event::EventSource;
-use crate::{
-    gpio::{
-        self,
-        gpioa::{PA10, PA11, PA8, PA9},
-        gpiob::{PB12, PB13, PB14, PB15},
-        gpioc::{PC6, PC7, PC8, PC9},
-        Alternate, AF13, AF3,
-    },
-    pwm::{ComplementaryImpossible, Pins},
-    stm32::HRTIM_COMMON,
+use hal::gpio::{
+    self,
+    gpioa::{PA10, PA11, PA8, PA9},
+    gpiob::{PB12, PB13, PB14, PB15},
+    gpioc::{PC6, PC7, PC8, PC9},
+    Alternate, AF13, AF3,
 };
 
 mod sealed {
@@ -203,10 +202,6 @@ pins! {
 
     HRTIM_TIME: CH1: PC8<AF3>, CH2: PC9<AF3>
     HRTIM_TIMF: CH1: PC6<AF13>, CH2: PC7<AF13>
-}
-
-impl<T> Pins<T, (), ComplementaryImpossible> for () {
-    type Channel = ();
 }
 
 impl<T> sealed::Sealed<T> for () {}

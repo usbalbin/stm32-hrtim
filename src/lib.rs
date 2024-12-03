@@ -1,3 +1,5 @@
+#![no_std]
+
 pub mod adc_trigger;
 pub mod capture;
 pub mod compare_register;
@@ -10,12 +12,24 @@ pub mod output;
 pub mod timer;
 pub mod timer_eev_cfg;
 
+#[cfg(any(feature = "stm32f3"))]
+pub use stm32f3xx_hal as hal;
+
+#[cfg(any(feature = "stm32h7"))]
+pub use stm32h7xx_hal as hal;
+
+#[cfg(any(feature = "stm32g4"))]
+#[path = "stm32g4.rs"]mod mcu;
+
+pub use mcu::{hal, hal::stm32};
+
+
 use core::marker::PhantomData;
 use core::mem::MaybeUninit;
 
-use crate::hrtim::compare_register::{HrCr1, HrCr2, HrCr3, HrCr4};
-use crate::hrtim::fault::{FaultAction, FaultSource};
-use crate::hrtim::timer::HrTim;
+use crate::compare_register::{HrCr1, HrCr2, HrCr3, HrCr4};
+use crate::fault::{FaultAction, FaultSource};
+use crate::timer::HrTim;
 use crate::stm32::{
     HRTIM_COMMON, HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME,
     HRTIM_TIMF,
@@ -29,9 +43,9 @@ use self::deadtime::DeadtimeConfig;
 use self::output::ToHrOut;
 use self::timer_eev_cfg::EevCfgs;
 
-use crate::pwm::{self, Alignment, Polarity, TimerType};
-use crate::rcc::{GetBusFreq, Rcc};
-use crate::time::Hertz;
+use hal::pwm::{self, Polarity};
+use hal::rcc::{GetBusFreq, Rcc};
+use hal::time::Hertz;
 
 /// Internal enum that keeps track of the count settings before PWM is finalized
 enum CountSettings {
@@ -221,8 +235,8 @@ macro_rules! hrtim_finalize_body {
         let tim = unsafe { &*$TIMX::ptr() };
         let (period, prescaler_bits) = match $this.count {
             CountSettings::Period(period) => (period as u32, PSCL::BITS as u16),
-            CountSettings::Frequency( freq ) => {
-                <TimerHrTim<PSCL>>::calculate_frequency($this.base_freq, freq, $this.counting_direction.into())
+            CountSettings::Frequency(_freq) => {
+                todo!()//<TimerHrTim<PSCL>>::calculate_frequency($this.base_freq, freq, $this.counting_direction.into())
             },
         };
 
@@ -297,8 +311,8 @@ macro_rules! hrtim_finalize_body {
                 .fault2().bits($this.fault2_bits)
 
                 // Set output polarity for both outputs
-                .pol1().bit($this.out1_polarity == Polarity::ActiveLow)
-                .pol2().bit($this.out2_polarity == Polarity::ActiveLow)
+                .pol1().bit(matches!($this.out1_polarity, Polarity::ActiveLow))
+                .pol2().bit(matches!($this.out2_polarity, Polarity::ActiveLow))
             );
             if let Some(deadtime) = $this.deadtime {
                 let DeadtimeConfig {
@@ -759,6 +773,7 @@ impl_pscl! {
     Pscl128 => 0b111, 128, 0x0003, 0xFFFD
 }
 
+/*
 /// HrTim timer
 struct TimerHrTim<PSC>(PhantomData<PSC>);
 
@@ -780,3 +795,4 @@ impl<PSC: HrtimPrescaler> pwm::TimerType for TimerHrTim<PSC> {
         (period, PSC::BITS.into())
     }
 }
+*/
