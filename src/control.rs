@@ -6,7 +6,7 @@ use crate::fault::{
 
 use crate::{hal, stm32};
 use hal::rcc::{Enable, Rcc, Reset};
-use stm32::{HRTIM_COMMON, RCC};
+use stm32::HRTIM_COMMON;
 
 use super::{external_event::EevInputs, fault::FaultInputs};
 
@@ -15,15 +15,15 @@ pub trait HrControltExt {
 }
 
 impl HrControltExt for HRTIM_COMMON {
-    fn hr_control(self, _rcc: &mut Rcc) -> HrTimOngoingCalibration {
+    fn hr_control(self, #[allow(unused_variables)] rcc: &mut Rcc) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
         unsafe {
             #[cfg(feature = "stm32g4")]
-            let rcc_ptr = &*RCC::ptr();
+            let rcc_ptr = &*stm32::RCC::ptr();
 
             #[cfg(feature = "stm32f3")]
-            let rcc_ptr = &mut *RCC::ptr();
+            let rcc_ptr = &mut rcc.apb2;
 
             <HRTIM_COMMON as Enable>::enable(rcc_ptr);
             <HRTIM_COMMON as Reset>::reset(rcc_ptr);
