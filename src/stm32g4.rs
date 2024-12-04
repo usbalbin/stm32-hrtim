@@ -1,5 +1,6 @@
 
 pub use stm32g4xx_hal as hal;
+pub use hal::stm32;
 
 #[allow(non_camel_case_types, dead_code)]
 pub enum DmaMuxResources {
@@ -11,3 +12,10 @@ pub enum DmaMuxResources {
     HRTIM_TIME = 100,
     HRTIM_TIMF = 101,
 }
+
+pub type GpioInputMode = hal::gpio::Input<hal::gpio::Floating>;
+
+pub use hal::pwm::Alignment;
+
+#[cfg(feature = "stm32g4")]
+pub use hal::pwm::Polarity;

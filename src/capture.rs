@@ -1,11 +1,16 @@
-use crate::{hal, stm32};
+use crate::stm32;
 
 use super::timer;
+
+#[cfg(feature = "stm32g4")]
 use crate::mcu::DmaMuxResources;
-use hal::dma::traits::TargetAddress;
-use hal::dma::PeripheralToMemory;
-use stm32::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF};
+#[cfg(feature = "stm32g4")]
+use crate::hal::dma::PeripheralToMemory;
+
 use core::marker::PhantomData;
+#[cfg(feature = "hrtim_v2")]
+use stm32::HRTIM_TIMF;
+use stm32::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
 
 pub struct Ch1;
 pub struct Ch2;
@@ -27,6 +32,7 @@ pub struct HrCapt<TIM, PSCL, CH, DMA> {
 #[derive(Copy, Clone, Debug)]
 pub enum CountingDirection {
     Up = 0,
+    #[cfg(feature = "hrtim_v2")]
     Down = 1,
 }
 
@@ -129,6 +135,7 @@ pub trait HrCapture {
         // The capture counter always counts up and restarts at period
         match dir {
             CountingDirection::Up => i32::from(value),
+            #[cfg(feature = "hrtim_v2")]
             CountingDirection::Down => i32::from(value) - i32::from(period),
         }
     }
@@ -140,10 +147,14 @@ pub trait HrCapture {
 
 pub fn dma_value_to_dir_and_value(x: u32) -> (u16, CountingDirection) {
     let value = (x & 0xFFFF) as u16;
+    #[cfg(feature = "hrtim_v2")]
     match x & (1 << 16) != 0 {
         true => (value, CountingDirection::Down),
         false => (value, CountingDirection::Up),
     }
+
+    #[cfg(any(feature = "hrtim_v1", feature = "hrtim_v1_1"))]
+    (value, CountingDirection::Up)
 }
 
 pub fn dma_value_to_signed(x: u32, period: u16) -> i32 {
@@ -152,6 +163,7 @@ pub fn dma_value_to_signed(x: u32, period: u16) -> i32 {
     // The capture counter always counts up and restarts at period
     match dir {
         CountingDirection::Up => i32::from(value),
+        #[cfg(feature = "hrtim_v2")]
         CountingDirection::Down => i32::from(value) - i32::from(period),
     }
 }
@@ -219,10 +231,14 @@ macro_rules! impl_capture {
                 let tim = unsafe { &*$TIMX::ptr() };
                 let data = tim.$cptXr().read();
 
+                #[cfg(feature = "hrtim_v2")]
                 let dir = match data.dir().bit() {
                     true => CountingDirection::Down,
                     false => CountingDirection::Up,
                 };
+                #[cfg(any(feature = "hrtim_v1", feature = "hrtim_v1_1"))]
+                let dir = CountingDirection::Up;
+
                 let value = data.cpt().bits();
 
                 (value, dir)
@@ -243,7 +259,8 @@ macro_rules! impl_capture {
             }
         }
 
-        unsafe impl<PSCL> TargetAddress<PeripheralToMemory> for HrCapt<$TIMX, PSCL, $CH, Dma> {
+        #[cfg(feature = "stm32g4")]
+        unsafe impl<PSCL> crate::hal::dma::traits::TargetAddress<PeripheralToMemory> for HrCapt<$TIMX, PSCL, $CH, Dma> {
             #[inline(always)]
             fn address(&self) -> u32 {
                 let tim = unsafe { &*$TIMX::ptr() };
@@ -262,6 +279,10 @@ impl_capture! {
     HRTIM_TIMB,
     HRTIM_TIMC,
     HRTIM_TIMD,
-    HRTIM_TIME,
+    HRTIM_TIME
+}
+
+#[cfg(feature = "hrtim_v2")]
+impl_capture! {
     HRTIM_TIMF
 }

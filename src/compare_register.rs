@@ -1,8 +1,10 @@
 use core::marker::PhantomData;
 
 use crate::stm32::{
-    HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF,
+    HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME,
 };
+#[cfg(feature = "hrtim_v2")]
+use crate::stm32::HRTIM_TIMF;
 
 pub trait HrCompareRegister {
     fn get_duty(&self) -> u16;
@@ -14,11 +16,16 @@ pub struct HrCr2<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
 pub struct HrCr3<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
 pub struct HrCr4<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
 
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc13Trigger as Adc13;
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc24Trigger as Adc24;
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc579Trigger as Adc579;
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc6810Trigger as Adc6810;
 
+#[cfg(feature = "stm32g4")]
 macro_rules! hrtim_cr_helper {
     (HRTIM_MASTER: $cr_type:ident:
         $cmpXYr:ident,
@@ -71,6 +78,7 @@ macro_rules! hrtim_cr_helper {
     };
 }
 
+#[cfg(feature = "stm32g4")]
 macro_rules! hrtim_cr {
     ($($TIMX:ident: [
         [$(($cr1_trigger:ident: $cr1_trigger_bits:expr)),*], [$(($cr1_event_dst:ident, $cr1_tim_event_index:expr)),*],
@@ -86,6 +94,7 @@ macro_rules! hrtim_cr {
 }
 
 // See RM0440 Table 218. 'Events mapping across timer A to F'
+#[cfg(feature = "stm32g4")]
 hrtim_cr! {
     HRTIM_MASTER: [
         [(Adc13: 1 << 0),  (Adc24: 1 << 0),  (Adc579: 0),  (Adc6810: 0) ], [],
@@ -179,8 +188,11 @@ hrtim_timer_rst! {
     HRTIM_TIMD: HrCr4: 3,
 
     HRTIM_TIME: HrCr2: 2,
-    HRTIM_TIME: HrCr4: 3,
+    HRTIM_TIME: HrCr4: 3
+}
 
+#[cfg(feature = "hrtim_v2")]
+hrtim_timer_rst! {
     HRTIM_TIMF: HrCr2: 2,
     HRTIM_TIMF: HrCr4: 3
 }
