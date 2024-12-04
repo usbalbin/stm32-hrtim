@@ -1,6 +1,8 @@
 use crate::stm32::{
-    HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF,
+    HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME,
 };
+#[cfg(feature = "hrtim_v2")]
+use crate::stm32::HRTIM_TIMF;
 use core::marker::PhantomData;
 
 use super::{
@@ -294,6 +296,7 @@ macro_rules! hrtim_timer {
     )+}
 }
 
+#[cfg(feature = "stm32g4")]
 macro_rules! hrtim_timer_adc_trigger {
     ($($TIMX:ident:
         [$(($AdcTrigger:ident: [
@@ -313,9 +316,13 @@ macro_rules! hrtim_timer_adc_trigger {
     }
 }
 
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc13Trigger as Adc13;
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc24Trigger as Adc24;
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc579Trigger as Adc579;
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc6810Trigger as Adc6810;
 
 hrtim_timer! {
@@ -326,9 +333,11 @@ hrtim_timer! {
     HRTIM_TIMC: tccen, tcudis, (rstr),
     HRTIM_TIMD: tdcen, tdudis, (rstr),
     HRTIM_TIME: tecen, teudis, (rstr),
-    HRTIM_TIMF: tfcen, tfudis, (rstr),
 }
+#[cfg(feature = "hrtim_v2")]
+hrtim_timer! {HRTIM_TIMF: tfcen, tfudis, (rstr),}
 
+#[cfg(feature = "stm32g4")]
 hrtim_timer_adc_trigger! {
     HRTIM_MASTER: [(Adc13: [(PER: 1 << 4),]), (Adc24: [(PER: 1 << 4),]), (Adc579: [(PER: 4),]), (Adc6810: [(PER: 4),])],
 

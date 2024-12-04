@@ -16,9 +16,13 @@ pub struct EevCfgs<TIM> {
     // TODO: Note there are some peculiarities here with fast mode
     // One way to prevent missuse would be to require a borrowed ExternalEventSource<IS_FAST> when setting
     // filter/latching as well as the event_counter related settings below.
+    #[cfg(feature = "hrtim_v2")]
     pub(crate) event_counter_enable_bit: bool,
+    #[cfg(feature = "hrtim_v2")]
     pub(crate) event_counter_reset_mode_bit: bool,
+    #[cfg(feature = "hrtim_v2")]
     pub(crate) event_counter_source_bits: u8,
+    #[cfg(feature = "hrtim_v2")]
     pub(crate) event_counter_threshold_bits: u8,
 }
 
@@ -57,9 +61,13 @@ impl<TIM> Clone for EevCfgs<TIM> {
             eev8: self.eev8.clone(),
             eev9: self.eev9.clone(),
             eev10: self.eev10.clone(),
+            #[cfg(feature = "hrtim_v2")]
             event_counter_enable_bit: self.event_counter_enable_bit,
+            #[cfg(feature = "hrtim_v2")]
             event_counter_reset_mode_bit: self.event_counter_reset_mode_bit,
+            #[cfg(feature = "hrtim_v2")]
             event_counter_source_bits: self.event_counter_source_bits,
+            #[cfg(feature = "hrtim_v2")]
             event_counter_threshold_bits: self.event_counter_threshold_bits,
         }
     }
@@ -185,9 +193,13 @@ impl<TIM> Default for EevCfgs<TIM> {
             eev8: Default::default(),
             eev9: Default::default(),
             eev10: Default::default(),
+            #[cfg(feature = "hrtim_v2")]
             event_counter_enable_bit: false,
+            #[cfg(feature = "hrtim_v2")]
             event_counter_reset_mode_bit: false,
+            #[cfg(feature = "hrtim_v2")]
             event_counter_source_bits: 0,
+            #[cfg(feature = "hrtim_v2")]
             event_counter_threshold_bits: 0,
         }
     }

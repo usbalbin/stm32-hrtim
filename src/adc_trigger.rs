@@ -1,17 +1,21 @@
 use core::marker::PhantomData;
 
+#[cfg(feature = "stm32g4")]
 pub trait Adc13Trigger {
     const BITS: u32;
 }
 
+#[cfg(feature = "stm32g4")]
 pub trait Adc24Trigger {
     const BITS: u32;
 }
 
+#[cfg(feature = "stm32g4")]
 pub trait Adc579Trigger {
     const BITS: u32;
 }
 
+#[cfg(feature = "stm32g4")]
 pub trait Adc6810Trigger {
     const BITS: u32;
 }

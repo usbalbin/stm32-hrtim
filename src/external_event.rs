@@ -1,10 +1,14 @@
-use crate::{hal, stm32};
+use crate::stm32;
 
-use hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6, COMP7};
-use hal::gpio::gpiob::{PB3, PB4, PB5, PB6, PB7, PB8, PB9};
-use hal::gpio::gpioc::{PC11, PC12, PC5, PC6};
-use hal::gpio::{self, AF13, AF3};
-use hal::pwm::Polarity;
+use crate::Polarity;
+#[cfg(feature = "stm32g4")]
+use crate::hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6, COMP7};
+#[cfg(feature = "stm32g4")]
+use crate::hal::gpio::gpiob::{PB3, PB4, PB5, PB6, PB7, PB8, PB9};
+#[cfg(feature = "stm32g4")]
+use crate::hal::gpio::gpioc::{PC11, PC12, PC5, PC6};
+#[cfg(feature = "stm32g4")]
+use crate::hal::gpio::{self, AF13, AF3};
 use stm32::HRTIM_COMMON;
 
 use super::control::HrTimCalibrated;
@@ -54,8 +58,9 @@ pub unsafe trait EevSrcBits<const EEV_N: u8>: Sized {
     fn cfg(self) {}
 }
 
+#[cfg(feature = "stm32g4")]
 macro_rules! impl_eev_input {
-    ($N:literal: COMP=[$compX:ident $(, ($compY:ident, $compY_src_bits:literal))*], PINS=[$(($pin:ident, $af:ident)),*]) => {
+    ($($N:literal: COMP=[$compX:ident $(, ($compY:ident, $compY_src_bits:literal))*], PINS=[$(($pin:ident, $af:ident)),*])*) => {$(
         $(unsafe impl<IM> EevSrcBits<$N> for $pin<gpio::Input<IM>>{
             const SRC_BITS: u8 = 0b00;
             fn cfg(self) {
@@ -63,15 +68,15 @@ macro_rules! impl_eev_input {
             }
         })*
 
-        unsafe impl<ED> EevSrcBits<$N> for &hal::comparator::Comparator<$compX, ED>
-            where ED: hal::comparator::EnabledState
+        unsafe impl<ED> EevSrcBits<$N> for &crate::hal::comparator::Comparator<$compX, ED>
+            where ED: crate::hal::comparator::EnabledState
         {
             const SRC_BITS: u8 = 0b01;
         }
 
         $(
-            unsafe impl<ED> EevSrcBits<$N> for &hal::comparator::Comparator<$compY, ED>
-                where ED: hal::comparator::EnabledState
+            unsafe impl<ED> EevSrcBits<$N> for &crate::hal::comparator::Comparator<$compY, ED>
+                where ED: crate::hal::comparator::EnabledState
             {
                 const SRC_BITS: u8 = $compY_src_bits;
             }
@@ -85,21 +90,24 @@ macro_rules! impl_eev_input {
                 unsafe { SourceBuilder::new(SRC::SRC_BITS) }
             }
         }
-    };
+    )*};
 }
 
-impl_eev_input!(1: COMP = [COMP2], PINS = [(PC12, AF3)]);
-impl_eev_input!(2: COMP = [COMP4], PINS = [(PC11, AF3)]);
-impl_eev_input!(3: COMP = [COMP6], PINS = [(PB7, AF13)]);
-impl_eev_input!(4: COMP = [COMP1, (COMP5, 0b10)], PINS = [(PB6, AF13)]);
-impl_eev_input!(5: COMP = [COMP3, (COMP7, 0b10)], PINS = [(PB9, AF13)]);
-impl_eev_input!(6: COMP = [COMP2, (COMP1, 0b10)], PINS = [(PB5, AF13)]);
-impl_eev_input!(7: COMP = [COMP4], PINS = [(PB4, AF13)]);
-impl_eev_input!(8: COMP = [COMP6, (COMP3, 0b10)], PINS = [(PB8, AF13)]);
-impl_eev_input!(9: COMP = [COMP5, (COMP4, 0b11)], PINS = [(PB3, AF13)]);
-impl_eev_input!(10: COMP = [COMP7], PINS = [(PC5, AF13), (PC6, AF3)]);
+#[cfg(feature = "stm32g4")]
+impl_eev_input! {
+    1: COMP = [COMP2], PINS = [(PC12, AF3)]
+    2: COMP = [COMP4], PINS = [(PC11, AF3)]
+    3: COMP = [COMP6], PINS = [(PB7, AF13)]
+    4: COMP = [COMP1, (COMP5, 0b10)], PINS = [(PB6, AF13)]
+    5: COMP = [COMP3, (COMP7, 0b10)], PINS = [(PB9, AF13)]
+    6: COMP = [COMP2, (COMP1, 0b10)], PINS = [(PB5, AF13)]
+    7: COMP = [COMP4], PINS = [(PB4, AF13)]
+    8: COMP = [COMP6, (COMP3, 0b10)], PINS = [(PB8, AF13)]
+    9: COMP = [COMP5, (COMP4, 0b11)], PINS = [(PB3, AF13)]
+    10: COMP = [COMP7], PINS = [(PC5, AF13), (PC6, AF3)]
+}
 
-#[derive(/*Copy, Clone, Debug, PartialEq*/ )]
+#[derive()]
 pub enum EdgeOrPolarity {
     Edge(Edge),
     Polarity(Polarity),

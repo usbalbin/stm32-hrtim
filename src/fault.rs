@@ -1,11 +1,17 @@
+#[cfg(feature = "stm32g4")]
 use crate::control::HrPwmControl;
-use crate::hal;
-use hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6};
-use hal::gpio::gpioa::{PA12, PA15};
-use hal::gpio::gpiob::{PB0, PB10, PB11};
-use hal::gpio::gpioc::{PC10, PC7};
-use hal::gpio::{self, AF13, AF3};
-use hal::stm32::HRTIM_COMMON;
+use crate::stm32;
+
+#[cfg(feature = "stm32g4")]
+use crate::hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6};
+#[cfg(feature = "stm32g4")]
+use crate::hal::gpio::{
+    self, AF13, AF3,
+    gpioa::{PA12, PA15},
+    gpiob::{PB0, PB10, PB11},
+    gpioc::{PC10, PC7},
+};
+use stm32::HRTIM_COMMON;
 
 use super::control::HrPwmCtrl;
 
@@ -65,6 +71,7 @@ impl<I> SourceBuilder<I> {
     }
 }
 
+#[cfg(feature = "stm32g4")]
 macro_rules! impl_faults {
     ($(
         $input:ident => $source:ident:
@@ -95,7 +102,8 @@ macro_rules! impl_faults {
                 }
             )*
 
-            pub fn bind_comp(self, _comp: &hal::comparator::Comparator<$compX, hal::comparator::Enabled>) -> SourceBuilder<$input> {
+            #[cfg(feature = "stm32g4")]
+            pub fn bind_comp(self, _comp: &crate::hal::comparator::Comparator<$compX, crate::hal::comparator::Enabled>) -> SourceBuilder<$input> {
                 unsafe { SourceBuilder::new(self, 0b01) }
             }
 
@@ -147,6 +155,7 @@ macro_rules! impl_faults {
     )+}
 }
 
+#[cfg(feature = "stm32g4")]
 impl_faults!(
     FaultInput1 => FaultSource1: PINS=[(PA12, AF13)], COMP=COMP2, 0b000001, fltinr1, flt1src, flt1src_1, flt1p, flt1f, flt1e, flt1lck,
     FaultInput2 => FaultSource2: PINS=[(PA15, AF13)], COMP=COMP4, 0b000010, fltinr1, flt2src, flt2src_1, flt2p, flt2f, flt2e, flt2lck,
@@ -157,22 +166,34 @@ impl_faults!(
 );
 
 pub struct FaultInputs {
+    #[cfg(feature = "stm32g4")]
     pub fault_input1: FaultInput1,
+    #[cfg(feature = "stm32g4")]
     pub fault_input2: FaultInput2,
+    #[cfg(feature = "stm32g4")]
     pub fault_input3: FaultInput3,
+    #[cfg(feature = "stm32g4")]
     pub fault_input4: FaultInput4,
+    #[cfg(feature = "stm32g4")]
     pub fault_input5: FaultInput5,
+    #[cfg(feature = "stm32g4")]
     pub fault_input6: FaultInput6,
 }
 
 impl FaultInputs {
     pub(crate) unsafe fn new() -> Self {
         FaultInputs {
+            #[cfg(feature = "stm32g4")]
             fault_input1: FaultInput1,
+            #[cfg(feature = "stm32g4")]
             fault_input2: FaultInput2,
+            #[cfg(feature = "stm32g4")]
             fault_input3: FaultInput3,
+            #[cfg(feature = "stm32g4")]
             fault_input4: FaultInput4,
+            #[cfg(feature = "stm32g4")]
             fault_input5: FaultInput5,
+            #[cfg(feature = "stm32g4")]
             fault_input6: FaultInput6,
         }
     }
@@ -267,5 +288,9 @@ impl_flt_monitor!(
     FltMonitor3: (flt3, flt3c, flt3ie),
     FltMonitor4: (flt4, flt4c, flt4ie),
     FltMonitor5: (flt5, flt5c, flt5ie),
+);
+
+#[cfg(feature = "hrtim_v2")]
+impl_flt_monitor!(
     FltMonitor6: (flt6, flt6c, flt6ie),
 );

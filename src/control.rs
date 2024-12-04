@@ -1,6 +1,9 @@
 use crate::fault::{
-    FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitor6, FltMonitorSys,
+    FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitorSys,
 };
+#[cfg(feature = "hrtim_v2")]
+use crate::fault::FltMonitor6;
+
 use crate::{hal, stm32};
 use hal::rcc::{Enable, Rcc, Reset};
 use stm32::{HRTIM_COMMON, RCC};
@@ -16,7 +19,11 @@ impl HrControltExt for HRTIM_COMMON {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
         unsafe {
+            #[cfg(feature = "stm32g4")]
             let rcc_ptr = &*RCC::ptr();
+
+            #[cfg(feature = "stm32f3")]
+            let rcc_ptr = &mut *RCC::ptr();
 
             <HRTIM_COMMON as Enable>::enable(rcc_ptr);
             <HRTIM_COMMON as Reset>::reset(rcc_ptr);
@@ -28,16 +35,26 @@ impl HrControltExt for HRTIM_COMMON {
             .write(|w| w.cal().set_bit().calen().clear_bit());
 
         HrTimOngoingCalibration {
+            #[cfg(feature = "stm32g4")]
             adc_trigger1_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger2_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger3_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger4_postscaler: AdcTriggerPostscaler::None,
 
+            #[cfg(feature = "stm32g4")]
             adc_trigger5_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger6_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger7_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger8_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger9_postscaler: AdcTriggerPostscaler::None,
+            #[cfg(feature = "stm32g4")]
             adc_trigger10_postscaler: AdcTriggerPostscaler::None,
 
             flt_divider: SamplingClkDiv::None,
@@ -47,16 +64,26 @@ impl HrControltExt for HRTIM_COMMON {
 }
 
 pub struct HrTimOngoingCalibration {
+    #[cfg(feature = "stm32g4")]
     adc_trigger1_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger2_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger3_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger4_postscaler: AdcTriggerPostscaler,
 
+    #[cfg(feature = "stm32g4")]
     adc_trigger5_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger6_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger7_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger8_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger9_postscaler: AdcTriggerPostscaler,
+    #[cfg(feature = "stm32g4")]
     adc_trigger10_postscaler: AdcTriggerPostscaler,
 
     flt_divider: SamplingClkDiv,
@@ -69,16 +96,26 @@ impl HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
         let Self {
+            #[cfg(feature = "stm32g4")]
             adc_trigger1_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger2_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger3_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger4_postscaler,
 
+            #[cfg(feature = "stm32g4")]
             adc_trigger5_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger6_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger7_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger8_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger9_postscaler,
+            #[cfg(feature = "stm32g4")]
             adc_trigger10_postscaler,
 
             flt_divider,
@@ -97,6 +134,7 @@ impl HrTimOngoingCalibration {
                 .write(|w| w.fltsd().bits(flt_divider as u8));
             common.eecr3().write(|w| w.eevsd().bits(eev_divider as u8));
 
+            #[cfg(feature = "stm32g4")]
             common.adcps1().write(|w| {
                 w.adc1psc()
                     .bits(adc_trigger1_postscaler as u8)
@@ -110,6 +148,7 @@ impl HrTimOngoingCalibration {
                     .bits(adc_trigger5_postscaler as u8)
             });
 
+            #[cfg(feature = "stm32g4")]
             common.adcps2().write(|w| {
                 w.adc6psc()
                     .bits(adc_trigger6_postscaler as u8)
@@ -141,21 +180,25 @@ impl HrTimOngoingCalibration {
         })
     }
 
+    #[cfg(feature = "stm32g4")]
     pub fn set_adc1_trigger_psc(mut self, post_scaler: AdcTriggerPostscaler) -> Self {
         self.adc_trigger1_postscaler = post_scaler;
         self
     }
 
+    #[cfg(feature = "stm32g4")]
     pub fn set_adc2_trigger_psc(mut self, post_scaler: AdcTriggerPostscaler) -> Self {
         self.adc_trigger2_postscaler = post_scaler;
         self
     }
 
+    #[cfg(feature = "stm32g4")]
     pub fn set_adc3_trigger_psc(mut self, post_scaler: AdcTriggerPostscaler) -> Self {
         self.adc_trigger3_postscaler = post_scaler;
         self
     }
 
+    #[cfg(feature = "stm32g4")]
     pub fn set_adc4_trigger_psc(mut self, post_scaler: AdcTriggerPostscaler) -> Self {
         self.adc_trigger4_postscaler = post_scaler;
         self
@@ -188,17 +231,28 @@ impl HrTimCalibrated {
             fault_3: FltMonitor3,
             fault_4: FltMonitor4,
             fault_5: FltMonitor5,
+            #[cfg(feature = "hrtim_v2")]
             fault_6: FltMonitor6,
 
+            #[cfg(feature = "stm32g4")]
             adc_trigger1: Adc1Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger2: Adc2Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger3: Adc3Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger4: Adc4Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger5: Adc5Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger6: Adc6Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger7: Adc7Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger8: Adc8Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger9: Adc9Trigger,
+            #[cfg(feature = "stm32g4")]
             adc_trigger10: Adc10Trigger,
         }
     }
@@ -227,21 +281,33 @@ pub struct HrPwmControl {
     pub fault_3: FltMonitor3,
     pub fault_4: FltMonitor4,
     pub fault_5: FltMonitor5,
+    #[cfg(feature = "stm32g4")]
     pub fault_6: FltMonitor6,
 
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger1: Adc1Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger2: Adc2Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger3: Adc3Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger4: Adc4Trigger,
 
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger5: Adc5Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger6: Adc6Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger7: Adc7Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger8: Adc8Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger9: Adc9Trigger,
+    #[cfg(feature = "stm32g4")]
     pub adc_trigger10: Adc10Trigger,
 }
 
+#[cfg(feature = "stm32g4")]
 macro_rules! impl_adc1234_trigger {
     ($($t:ident: [$trait_:ident, $adcXr:ident, $variant345:ident $(, $variant12:ident)*]),*) => {$(
         #[non_exhaustive]
@@ -270,6 +336,7 @@ macro_rules! impl_adc1234_trigger {
     )*}
 }
 
+#[cfg(feature = "stm32g4")]
 macro_rules! impl_adc5678910_trigger {
     ($($t:ident: [$trait_:ident, $adcXtrg:ident, $variant345:ident, $variant12:ident]),*) => {$(
         #[non_exhaustive]
@@ -298,7 +365,7 @@ macro_rules! impl_adc5678910_trigger {
 
     )*}
 }
-
+#[cfg(feature = "stm32g4")]
 impl_adc1234_trigger! {//      reg    adc345,          adc12
     Adc1Trigger: [Adc13Trigger, adc1r, Hrtim_adc_trg_1, Hrtim_adc_trg_1],
     Adc2Trigger: [Adc24Trigger, adc2r, Hrtim_adc_trg_2],
@@ -306,6 +373,7 @@ impl_adc1234_trigger! {//      reg    adc345,          adc12
     Adc4Trigger: [Adc24Trigger, adc4r, Hrtim_adc_trg_4]
 }
 
+#[cfg(feature = "stm32g4")]
 impl_adc5678910_trigger! {
     Adc5Trigger: [Adc579Trigger,  adc5trg, Hrtim_adc_trg_5, Hrtim_adc_trg_5],
     Adc6Trigger: [Adc6810Trigger, adc6trg, Hrtim_adc_trg_6, Hrtim_adc_trg_6],
@@ -315,8 +383,10 @@ impl_adc5678910_trigger! {
     Adc10Trigger: [Adc6810Trigger, adc10trg, Hrtim_adc_trg_10, Hrtim_adc_trg_10]
 }
 
+#[cfg(feature = "stm32g4")]
 use super::adc_trigger::{Adc13Trigger, Adc24Trigger, Adc579Trigger, Adc6810Trigger};
 
+#[cfg(feature = "stm32g4")]
 pub enum AdcTriggerPostscaler {
     None = 0,
     Div2 = 1,
