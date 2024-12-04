@@ -129,7 +129,7 @@ pub trait HrCapture {
     /// <-------------- 0 --------------> t
     /// Negative result | positive result
     /// ```
-    fn get_last_signed(&self, period: u16) -> i32 {
+    fn get_last_signed(&self, #[allow(unused_variables)] period: u16) -> i32 {
         let (value, dir) = self.get_last();
 
         // The capture counter always counts up and restarts at period
@@ -157,7 +157,7 @@ pub fn dma_value_to_dir_and_value(x: u32) -> (u16, CountingDirection) {
     (value, CountingDirection::Up)
 }
 
-pub fn dma_value_to_signed(x: u32, period: u16) -> i32 {
+pub fn dma_value_to_signed(x: u32, #[allow(unused_variables)] period: u16) -> i32 {
     let (value, dir) = dma_value_to_dir_and_value(x);
 
     // The capture counter always counts up and restarts at period
