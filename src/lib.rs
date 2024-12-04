@@ -142,6 +142,7 @@ pub enum InterleavedMode {
     /// NOTE: Affects Cr1
     Dual,
 
+    #[cfg(feature = "hrtim_v2")]
     /// Triple interleaved mode
     ///
     /// Automatically force
@@ -154,6 +155,7 @@ pub enum InterleavedMode {
     /// using CMP2 (dual channel dac trigger and triggered-half modes).
     Triple,
 
+    #[cfg(feature = "hrtim_v2")]
     /// Quad interleaved mode
     ///
     /// Automatically force
@@ -241,10 +243,12 @@ macro_rules! hrtim_finalize_body {
             },
         };
 
-        let (half, intlvd) = match $this.interleaved_mode {
+        let (half, _intlvd) = match $this.interleaved_mode {
             InterleavedMode::Disabled => (false, 0b00),
             InterleavedMode::Dual => (true, 0b00),
+            #[cfg(feature = "hrtim_v2")]
             InterleavedMode::Triple => (false, 0b01),
+            #[cfg(feature = "hrtim_v2")]
             InterleavedMode::Quad => (false, 0b10),
         };
 
@@ -267,8 +271,7 @@ macro_rules! hrtim_finalize_body {
         #[cfg(feature = "hrtim_v2")]
         tim.cr().modify(|_r, w| unsafe {
             // Interleaved mode
-            #[cfg(feature = "hrtim_v2")]
-            w.intlvd().bits(intlvd)
+            w.intlvd().bits(_intlvd)
         });
 
         $(
