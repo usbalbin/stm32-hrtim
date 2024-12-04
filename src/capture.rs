@@ -86,7 +86,7 @@ pub trait HrCapture {
     ///
     /// where captures during down counting count as negative (before the upcount)
     ///
-    /// ```txt
+    /// ```text
     ///              Counter
     /// ----------------------------------   <--- period
     /// \               ^               /
@@ -117,7 +117,7 @@ pub trait HrCapture {
     ///
     /// where captures during down counting count as negative (before the upcount)
     ///
-    /// ```
+    /// ```text
     ///              Counter
     /// ----------------------------------   <--- period
     /// \               ^               /

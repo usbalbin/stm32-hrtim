@@ -19,18 +19,19 @@ impl HrControltExt for HRTIM_COMMON {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
         let rcc_ptr = {
-            #[cfg(feature = "stm32g4")] unsafe {
+            #[cfg(feature = "stm32g4")]
+            unsafe {
                 &*stm32::RCC::ptr()
             }
 
-            #[cfg(feature = "stm32f3")] {
+            #[cfg(feature = "stm32f3")]
+            {
                 &mut rcc.apb2
             }
         };
 
         <HRTIM_COMMON as Enable>::enable(rcc_ptr);
         <HRTIM_COMMON as Reset>::reset(rcc_ptr);
-        
 
         // Start calibration procedure
         common
