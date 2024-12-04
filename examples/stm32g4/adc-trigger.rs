@@ -106,11 +106,10 @@ fn main() -> ! {
         .ADC1
         .claim(ClockSource::SystemClock, &rcc, &mut delay, true);
 
-    // TODO: Add the three lines below once the hal has been updated or this example will not work
-    //adc.set_external_trigger((
-    //    adc::config::TriggerMode::RisingEdge,
-    //    &hr_control.adc_trigger1,
-    //));
+    adc.set_external_trigger((
+        adc::config::TriggerMode::RisingEdge,
+        (&hr_control.adc_trigger1).into(),
+    ));
     adc.enable_temperature(&dp.ADC12_COMMON);
     adc.set_continuous(adc::config::Continuous::Discontinuous);
     adc.reset_sequence();
