@@ -1,8 +1,6 @@
-use crate::stm32::{
-    HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME,
-};
 #[cfg(feature = "hrtim_v2")]
 use crate::stm32::HRTIM_TIMF;
+use crate::stm32::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
 use core::marker::PhantomData;
 
 use super::{

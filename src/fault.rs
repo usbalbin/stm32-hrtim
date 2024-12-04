@@ -6,10 +6,11 @@ use crate::stm32;
 use crate::hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6};
 #[cfg(feature = "stm32g4")]
 use crate::hal::gpio::{
-    self, AF13, AF3,
+    self,
     gpioa::{PA12, PA15},
     gpiob::{PB0, PB10, PB11},
     gpioc::{PC10, PC7},
+    AF13, AF3,
 };
 use stm32::HRTIM_COMMON;
 

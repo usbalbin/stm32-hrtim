@@ -1,4 +1,3 @@
-
 #[cfg(feature = "hrtim_v2")]
 use crate::stm32::HRTIM_TIMF;
 use crate::{
@@ -155,13 +154,13 @@ pub trait ToHrOut<TIM>: sealed::Sealed<TIM> {
     #[cfg(feature = "stm32f3")]
     type Afr;
 
-    fn connect_to_hrtim(self,
+    fn connect_to_hrtim(
+        self,
         #[cfg(feature = "stm32f3")]
         moder: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::MODER,
         #[cfg(feature = "stm32f3")]
         otyper: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-        #[cfg(feature = "stm32f3")]
-        afr: &mut Self::Afr
+        #[cfg(feature = "stm32f3")] afr: &mut Self::Afr,
     );
 }
 
@@ -176,22 +175,23 @@ where
 impl<TIM, PA, PB> ToHrOut<TIM> for (PA, PB)
 where
     PA: ToHrOut<TIM>,
-    PB: ToHrOut<TIM, GpioX=PA::GpioX, Afr=PA::Afr>,
+    PB: ToHrOut<TIM, GpioX = PA::GpioX, Afr = PA::Afr>,
 {
     type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
     type GpioX = PA::GpioX;
     type Afr = PA::Afr;
 
-    fn connect_to_hrtim(self,
-        
+    fn connect_to_hrtim(
+        self,
+
         moder: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::MODER,
-        
+
         otyper: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-        
-        afr: &mut Self::Afr
+
+        afr: &mut Self::Afr,
     ) {
-            self.0.connect_to_hrtim(moder, otyper, afr);
-            self.1.connect_to_hrtim(moder, otyper, afr);
+        self.0.connect_to_hrtim(moder, otyper, afr);
+        self.1.connect_to_hrtim(moder, otyper, afr);
     }
 }
 
@@ -222,7 +222,7 @@ macro_rules! pins_helper {
             #[cfg(feature = "stm32f3")]
             type GpioX = hal::gpio::$GpioX;
             #[cfg(feature = "stm32f3")]
-            type Afr = <Self as hal::gpio::marker::IntoAf<{$CHY_AF}>>::AFR;
+            type Afr = <Self as hal::gpio::marker::IntoAf<{ $CHY_AF }>>::AFR;
 
             // Pin<Gpio, Index, Alternate<PushPull, AF>>
             fn connect_to_hrtim(
@@ -231,17 +231,17 @@ macro_rules! pins_helper {
                 moder: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::MODER,
                 #[cfg(feature = "stm32f3")]
                 otyper: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-                #[cfg(feature = "stm32f3")]
-                afr: &mut Self::Afr
+                #[cfg(feature = "stm32f3")] afr: &mut Self::Afr,
             ) {
                 #[allow(non_snake_case, unused_variables)]
                 let $GpioX = ();
 
                 #[cfg(feature = "stm32f3")]
-                let _: $CHY<hal::gpio::Alternate<hal::gpio::PushPull, $CHY_AF>> = self.into_af_push_pull(moder, otyper, afr);
+                let _: $CHY<hal::gpio::Alternate<hal::gpio::PushPull, $CHY_AF>> =
+                    self.into_af_push_pull(moder, otyper, afr);
 
                 #[cfg(feature = "stm32g4")]
-                let _: $CHY<hal::gpio::Alternate<{$CHY_AF}>> = self.into_alternate();
+                let _: $CHY<hal::gpio::Alternate<{ $CHY_AF }>> = self.into_alternate();
             }
         }
     };
@@ -276,14 +276,15 @@ impl<T> ToHrOut<T> for () {
     #[cfg(feature = "stm32f3")]
     type Afr = ();
 
-    fn connect_to_hrtim(self,
+    fn connect_to_hrtim(
+        self,
         #[cfg(feature = "stm32f3")]
         _moder: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::MODER,
         #[cfg(feature = "stm32f3")]
         _otyper: &mut <Self::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-        #[cfg(feature = "stm32f3")]
-        _afr: &mut Self::Afr
-    ) {}
+        #[cfg(feature = "stm32f3")] _afr: &mut Self::Afr,
+    ) {
+    }
 }
 
 pub struct CH1<PSCL>(PhantomData<PSCL>);
