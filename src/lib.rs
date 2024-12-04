@@ -739,19 +739,30 @@ where
     PSCL: HrtimPrescaler,
     PINS: ToHrOut<HRTIM_MASTER>,
 {
-    pub fn finalize(self, _control: &mut HrPwmControl,
+    pub fn finalize(
+        self,
+        _control: &mut HrPwmControl,
         #[cfg(feature = "stm32f3")]
         moder: &mut <PINS::GpioX as hal::gpio::marker::GpioStatic>::MODER,
         #[cfg(feature = "stm32f3")]
         otyper: &mut <PINS::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-        #[cfg(feature = "stm32f3")]
-        afr: &mut PINS::Afr
+        #[cfg(feature = "stm32f3")] afr: &mut PINS::Afr,
     ) -> HrParts<HRTIM_MASTER, PSCL, ()> {
-        #[cfg(feature = "stm32f3")]{
-            hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, [], moder, otyper, afr)
+        #[cfg(feature = "stm32f3")]
+        {
+            hrtim_finalize_body!(
+                self,
+                MasterPreloadSource,
+                HRTIM_MASTER,
+                [],
+                moder,
+                otyper,
+                afr
+            )
         }
 
-        #[cfg(feature = "stm32g4")] {
+        #[cfg(feature = "stm32g4")]
+        {
             hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, [],)
         }
     }

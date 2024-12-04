@@ -1,6 +1,5 @@
-
-pub use stm32g4xx_hal as hal;
 pub use hal::stm32;
+pub use stm32g4xx_hal as hal;
 
 #[allow(non_camel_case_types, dead_code)]
 pub enum DmaMuxResources {

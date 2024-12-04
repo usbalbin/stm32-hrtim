@@ -1,8 +1,8 @@
+#[cfg(feature = "hrtim_v2")]
+use crate::fault::FltMonitor6;
 use crate::fault::{
     FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitorSys,
 };
-#[cfg(feature = "hrtim_v2")]
-use crate::fault::FltMonitor6;
 
 use crate::{hal, stm32};
 use hal::rcc::{Enable, Rcc, Reset};

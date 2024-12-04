@@ -1,6 +1,5 @@
 use crate::stm32;
 
-use crate::Polarity;
 #[cfg(feature = "stm32g4")]
 use crate::hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6, COMP7};
 #[cfg(feature = "stm32g4")]
@@ -9,6 +8,7 @@ use crate::hal::gpio::gpiob::{PB3, PB4, PB5, PB6, PB7, PB8, PB9};
 use crate::hal::gpio::gpioc::{PC11, PC12, PC5, PC6};
 #[cfg(feature = "stm32g4")]
 use crate::hal::gpio::{self, AF13, AF3};
+use crate::Polarity;
 use stm32::HRTIM_COMMON;
 
 use super::control::HrTimCalibrated;

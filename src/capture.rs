@@ -3,9 +3,9 @@ use crate::stm32;
 use super::timer;
 
 #[cfg(feature = "stm32g4")]
-use crate::mcu::DmaMuxResources;
-#[cfg(feature = "stm32g4")]
 use crate::hal::dma::PeripheralToMemory;
+#[cfg(feature = "stm32g4")]
+use crate::mcu::DmaMuxResources;
 
 use core::marker::PhantomData;
 #[cfg(feature = "hrtim_v2")]
