@@ -50,6 +50,7 @@ pub unsafe trait FaultSource: Copy {
     const ENABLE_BITS: u8;
 }
 
+#[cfg(feature = "stm32g4")]
 pub struct SourceBuilder<I> {
     _input: I,
     src_bits: u8,
@@ -61,6 +62,7 @@ pub struct SourceBuilder<I> {
     filter_bits: u8,
 }
 
+#[cfg(feature = "stm32g4")]
 impl<I> SourceBuilder<I> {
     unsafe fn new(input: I, src_bits: u8) -> Self {
         SourceBuilder {

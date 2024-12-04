@@ -18,16 +18,19 @@ impl HrControltExt for HRTIM_COMMON {
     fn hr_control(self, #[allow(unused_variables)] rcc: &mut Rcc) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
-        unsafe {
-            #[cfg(feature = "stm32g4")]
-            let rcc_ptr = &*stm32::RCC::ptr();
+        let rcc_ptr = {
+            #[cfg(feature = "stm32g4")] unsafe {
+                &*stm32::RCC::ptr()
+            }
 
-            #[cfg(feature = "stm32f3")]
-            let rcc_ptr = &mut rcc.apb2;
+            #[cfg(feature = "stm32f3")] {
+                &mut rcc.apb2
+            }
+        };
 
-            <HRTIM_COMMON as Enable>::enable(rcc_ptr);
-            <HRTIM_COMMON as Reset>::reset(rcc_ptr);
-        }
+        <HRTIM_COMMON as Enable>::enable(rcc_ptr);
+        <HRTIM_COMMON as Reset>::reset(rcc_ptr);
+        
 
         // Start calibration procedure
         common

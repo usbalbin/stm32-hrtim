@@ -195,6 +195,7 @@ pub struct SourceBuilder<const N: u8, const IS_FAST: bool> {
     filter_bits: u8,
 }
 
+#[cfg(feature = "stm32g4")]
 impl<const N: u8, const IS_FAST: bool> SourceBuilder<N, IS_FAST> {
     unsafe fn new(src_bits: u8) -> Self {
         Self {
