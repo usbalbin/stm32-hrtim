@@ -31,11 +31,7 @@ jobs:
           - stm32g474
           - stm32g484
         features:
-          - log-rtt,defmt
-          # TODO: -log-rtt # log-rtt without defmt, more combos?
-          - log-itm
-          - log-semihost
-          - cordic,log-rtt,defmt
+          - defmt
 
     steps:
       - uses: actions/checkout@v2
