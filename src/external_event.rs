@@ -328,8 +328,12 @@ macro_rules! impl_eev6_10_to_es {
 
                 let common = unsafe { &*HRTIM_COMMON::ptr() };
 
+                #[cfg(feature = "stm32h7")]
+                let please_dont_forget_to_remove_this_once_pac_is_fixed = ();
+
                 // SAFETY: Thanks to, `HrTimCalibrated`, we know we have exclusive access to the register,
                 //         we also know no timers are started.
+                #[cfg(not(feature = "stm32h7"))]
                 unsafe {
                     common.eecr2().modify(|_r, w| {
                         w.$eeXsrc()
