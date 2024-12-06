@@ -17,7 +17,8 @@ pub mod timer_eev_cfg;
 mod mcu;
 
 #[cfg(feature = "stm32h7")]
-pub use stm32h7xx_hal as hal;
+#[path = "stm32h7.rs"]
+mod mcu;
 
 #[cfg(feature = "stm32g4")]
 #[path = "stm32g4.rs"]
@@ -604,7 +605,7 @@ macro_rules! hrtim_hal {
                         )
                     }
 
-                    #[cfg(feature = "stm32g4")] {
+                    #[cfg(not(feature = "stm32f3"))] {
                         hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*],)
                     }
                 }
@@ -764,7 +765,7 @@ where
             )
         }
 
-        #[cfg(feature = "stm32g4")]
+        #[cfg(not(feature = "stm32f3"))]
         {
             hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, [],)
         }

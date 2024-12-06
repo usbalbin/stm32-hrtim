@@ -5,20 +5,29 @@ use crate::fault::{
 };
 
 use crate::{hal, stm32};
-use hal::rcc::{Enable, Rcc, Reset};
+
+#[cfg(feature = "stm32h7")]
+use hal::rcc::{rec::Hrtim as Rcc, ResetEnable as Reset, ResetEnable as Enable};
+
+#[cfg(not(feature = "stm32h7"))]
+use hal::rcc::{Enable, Reset};
+
+#[cfg(not(feature = "stm32h7"))]
+type Rcc = &mut hal::rcc::Rcc;
+
 use stm32::HRTIM_COMMON;
 
 use super::{external_event::EevInputs, fault::FaultInputs};
 
 pub trait HrControltExt {
-    fn hr_control(self, _rcc: &mut Rcc) -> HrTimOngoingCalibration;
+    fn hr_control(self, _rcc: Rcc) -> HrTimOngoingCalibration;
 }
 
 impl HrControltExt for HRTIM_COMMON {
-    fn hr_control(self, #[allow(unused_variables)] rcc: &mut Rcc) -> HrTimOngoingCalibration {
+    fn hr_control(self, #[allow(unused_variables)] rcc: Rcc) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
-        let rcc_ptr = {
+        let rcc = {
             #[cfg(feature = "stm32g4")]
             unsafe {
                 &*stm32::RCC::ptr()
@@ -28,10 +37,20 @@ impl HrControltExt for HRTIM_COMMON {
             {
                 &mut rcc.apb2
             }
+
+            #[cfg(feature = "stm32h7")]
+            {
+                rcc
+            }
         };
 
-        <HRTIM_COMMON as Enable>::enable(rcc_ptr);
-        <HRTIM_COMMON as Reset>::reset(rcc_ptr);
+        #[cfg(not(feature = "stm32h7"))]
+        <HRTIM_COMMON as Enable>::enable(rcc);
+        #[cfg(not(feature = "stm32h7"))]
+        <HRTIM_COMMON as Reset>::reset(rcc);
+
+        #[cfg(feature = "stm32h7")]
+        rcc.enable().reset();
 
         // Start calibration procedure
         common
@@ -136,6 +155,11 @@ impl HrTimOngoingCalibration {
             common
                 .fltinr2()
                 .write(|w| w.fltsd().bits(flt_divider as u8));
+
+            #[cfg(feature = "stm32h7")]
+            let please_dont_forget_to_remove_this_once_pac_is_fixed = ();
+
+            #[cfg(not(feature = "stm32h7"))]
             common.eecr3().write(|w| w.eevsd().bits(eev_divider as u8));
 
             #[cfg(feature = "stm32g4")]
