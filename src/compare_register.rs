@@ -23,7 +23,6 @@ use super::adc_trigger::Adc579Trigger as Adc579;
 #[cfg(feature = "stm32g4")]
 use super::adc_trigger::Adc6810Trigger as Adc6810;
 
-#[cfg(feature = "stm32g4")]
 macro_rules! hrtim_cr_helper {
     (HRTIM_MASTER: $cr_type:ident:
         $cmpXYr:ident,
@@ -76,7 +75,6 @@ macro_rules! hrtim_cr_helper {
     };
 }
 
-#[cfg(feature = "stm32g4")]
 macro_rules! hrtim_cr {
     ($($TIMX:ident: [
         [$(($cr1_trigger:ident: $cr1_trigger_bits:expr)),*], [$(($cr1_event_dst:ident, $cr1_tim_event_index:expr)),*],
@@ -141,6 +139,52 @@ hrtim_cr! {
         [(Adc13: 1 << 10), (Adc24: 1 << 11), (Adc579: 27), (Adc6810: 28)], [(HRTIM_TIMC, 9)                                  ],
         [(Adc13: 1 << 15),                   (Adc579: 28), (Adc6810: 29)], [(HRTIM_TIMB, 9), (HRTIM_TIMD, 9), (HRTIM_TIME, 8)],
         [(Adc13: 1 << 20), (Adc24: 1 << 19), (Adc579: 29), (Adc6810: 30)], [(HRTIM_TIMA, 9), (HRTIM_TIME, 9)                 ]
+    ]
+}
+
+// TODO: Populate more things
+#[cfg(any(feature = "stm32f3", feature = "stm32h7"))]
+hrtim_cr! {
+    HRTIM_MASTER: [
+        [], [],
+        [], [],
+        [], [],
+        [], []
+    ],
+
+    HRTIM_TIMA: [
+        [], [],
+        [], [],
+        [], [],
+        [], []
+    ],
+
+    HRTIM_TIMB: [
+        [], [],
+        [], [],
+        [], [],
+        [], []
+    ],
+
+    HRTIM_TIMC: [
+        [], [],
+        [], [],
+        [], [],
+        [], []
+    ],
+
+    HRTIM_TIMD: [
+        [], [],
+        [], [],
+        [], [],
+        [], []
+    ],
+
+    HRTIM_TIME: [
+        [], [],
+        [], [],
+        [], [],
+        [], []
     ]
 }
 

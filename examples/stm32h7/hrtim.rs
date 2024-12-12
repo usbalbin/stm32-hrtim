@@ -8,14 +8,15 @@ use stm32_hrtim::{
     HrParts, HrPwmAdvExt, Pscl4,
 };
 use stm32h7xx_hal::{
+    prelude::_embedded_hal_blocking_delay_DelayMs,
     delay::DelayExt,
     gpio::GpioExt,
     pwr::PwrExt,
-    rcc::{self, RccExt},
+    rcc::RccExt,
     stm32::{CorePeripherals, Peripherals},
 };
 
-use fugit::{ExtU32, RateExtU32 as _};
+use fugit::RateExtU32 as _;
 
 #[entry]
 fn main() -> ! {
@@ -34,7 +35,7 @@ fn main() -> ! {
 
     // Acquire the GPIO peripherals. This also enables the clock for
     // the GPIOs in the RCC register.
-    let gpioa = dp.GPIOA.split(ccdr.peripheral.GPIOA);
+    let gpioc = dp.GPIOC.split(ccdr.peripheral.GPIOC);
 
     // Get the delay provider.
     let mut delay = cp.SYST.delay(ccdr.clocks);
@@ -43,8 +44,8 @@ fn main() -> ! {
     // With max the max period set, this would be 960MHz/2^16 ~= 15kHz...
     let prescaler = Pscl4;
 
-    let pin_a = gpioa.pa8;
-    let pin_b = gpioa.pa9;
+    let pin_a = gpioc.pc6.into_input();
+    let pin_b = gpioc.pc7.into_input();
 
     //        .               .               .               .
     //        .  30%          .               .               .
@@ -71,7 +72,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced((pin_a, pin_b), &mut rcc)
+        .pwm_advanced((pin_a, pin_b))
         .prescaler(prescaler)
         .period(0xFFFF)
         .push_pull_mode(true) // Set push pull mode, out1 and out2 are
@@ -97,7 +98,7 @@ fn main() -> ! {
             cr1.set_duty(new_period / 3);
             timer.set_period(new_period);
 
-            delay.delay(500_u32.millis());
+            delay.delay_ms(500_u16);
         }
     }
 }

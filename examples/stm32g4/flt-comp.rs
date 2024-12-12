@@ -115,7 +115,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced(pin_a, &mut rcc)
+        .pwm_advanced(pin_a)
         .prescaler(prescaler)
         .period(0xFFFF)
         .with_fault_source(fault_source5) // Set fault source

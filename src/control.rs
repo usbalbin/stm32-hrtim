@@ -7,24 +7,30 @@ use crate::fault::{
 use crate::{hal, stm32};
 
 #[cfg(feature = "stm32h7")]
-use hal::rcc::{rec::Hrtim as Rcc, ResetEnable as Reset, ResetEnable as Enable};
+use hal::rcc::ResetEnable as _;
 
 #[cfg(not(feature = "stm32h7"))]
 use hal::rcc::{Enable, Reset};
-
-#[cfg(not(feature = "stm32h7"))]
-type Rcc = &mut hal::rcc::Rcc;
 
 use stm32::HRTIM_COMMON;
 
 use super::{external_event::EevInputs, fault::FaultInputs};
 
 pub trait HrControltExt {
-    fn hr_control(self, _rcc: Rcc) -> HrTimOngoingCalibration;
+    #[cfg(feature = "stm32h7")]
+    fn hr_control(self, _rcc: hal::rcc::rec::Hrtim) -> HrTimOngoingCalibration;
+
+    #[cfg(not(feature = "stm32h7"))]
+    fn hr_control(self, _rcc: &mut hal::rcc::Rcc) -> HrTimOngoingCalibration;
 }
 
 impl HrControltExt for HRTIM_COMMON {
-    fn hr_control(self, #[allow(unused_variables)] rcc: Rcc) -> HrTimOngoingCalibration {
+    fn hr_control(self, 
+        #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
+
+        #[allow(unused_variables)]
+        #[cfg(not(feature = "stm32h7"))] rcc: &mut hal::rcc::Rcc,
+    ) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
         let rcc = {

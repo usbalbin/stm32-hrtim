@@ -70,7 +70,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced((pin_a, pin_b), &mut rcc)
+        .pwm_advanced((pin_a, pin_b))
         .prescaler(prescaler)
         .push_pull_mode(true) // Set push pull mode, out1 and out2 are
         // alternated every period with one being
@@ -86,7 +86,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_MASTER
-        .pwm_advanced((), &mut rcc)
+        .pwm_advanced(())
         .prescaler(prescaler)
         .preload(MasterPreloadSource::OnMasterRepetitionUpdate)
         .period(0xFFFF)

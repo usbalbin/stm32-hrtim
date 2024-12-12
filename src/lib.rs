@@ -46,7 +46,6 @@ use self::deadtime::DeadtimeConfig;
 use self::output::ToHrOut;
 use self::timer_eev_cfg::EevCfgs;
 use fugit::HertzU32 as Hertz;
-use hal::rcc::Rcc;
 
 /// Internal enum that keeps track of the count settings before PWM is finalized
 enum CountSettings {
@@ -177,7 +176,6 @@ pub trait HrPwmAdvExt: Sized {
     fn pwm_advanced<PINS>(
         self,
         _pins: PINS,
-        rcc: &mut Rcc,
     ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
         PINS: ToHrOut<Self>;
@@ -550,7 +548,6 @@ macro_rules! hrtim_hal {
                 fn pwm_advanced<PINS>(
                     self,
                     pins: PINS,
-                    _rcc: &mut Rcc,
                 ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
                 where
                     PINS: ToHrOut<$TIMX>,
@@ -704,7 +701,6 @@ impl HrPwmAdvExt for HRTIM_MASTER {
     fn pwm_advanced<PINS>(
         self,
         pins: PINS,
-        _rcc: &mut Rcc,
     ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
         PINS: ToHrOut<HRTIM_MASTER>,

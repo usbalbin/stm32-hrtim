@@ -83,7 +83,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced((pin_a, pin_b), &mut rcc)
+        .pwm_advanced((pin_a, pin_b))
         .prescaler(prescaler)
         .period(period)
         .finalize(&mut hr_control);

@@ -8,10 +8,23 @@ use crate::{
 use core::marker::PhantomData;
 
 use super::event::EventSource;
+
 use hal::gpio::{
     gpioa::{PA10, PA11, PA8, PA9},
+    gpioc::PC8,
+};
+
+#[cfg(any(feature = "stm32f3", feature = "stm32g4"))]
+use hal::gpio::{
     gpiob::{PB12, PB13, PB14, PB15},
-    gpioc::{PC8, PC9},
+    gpioc::PC9,
+};
+
+#[cfg(feature = "stm32h7")]
+use hal::gpio::{
+    gpioa::PA12,
+    gpioc::{PC6, PC7},
+    gpiog::{PG6, PG7},
 };
 
 #[cfg(feature = "stm32g4")]
@@ -195,7 +208,7 @@ where
     }
 }
 
-#[cfg(feature = "stm32g4")]
+#[cfg(any(feature = "stm32g4", feature = "stm32h7"))]
 impl<TIM, PA, PB> ToHrOut<TIM> for (PA, PB)
 where
     PA: ToHrOut<TIM>,
@@ -240,13 +253,14 @@ macro_rules! pins_helper {
                 let _: $CHY<hal::gpio::Alternate<hal::gpio::PushPull, $CHY_AF>> =
                     self.into_af_push_pull(moder, otyper, afr);
 
-                #[cfg(feature = "stm32g4")]
+                #[cfg(any(feature = "stm32g4", feature = "stm32h7"))]
                 let _: $CHY<hal::gpio::Alternate<{ $CHY_AF }>> = self.into_alternate();
             }
         }
     };
 }
 
+// $GpioX is only used for f3x4
 macro_rules! pins {
     ($($TIMX:ty: CH1: $CH1:ident<$CH1_AF:literal>, CH2: $CH2:ident<$CH2_AF:literal>, $GpioX:ident)+) => {$(
         pins_helper!($TIMX, HrOut1, $CH1<$CH1_AF>, $GpioX);
@@ -266,6 +280,16 @@ pins! {
 #[cfg(feature = "stm32g4")]
 pins! {
     HRTIM_TIMF: CH1: PC6<13>, CH2: PC7<13>, Gpioc
+}
+
+// TODO: H7 does not start in input mode, it starts in Analog
+#[cfg(feature = "stm32h7")] // RM0433
+pins! {
+    HRTIM_TIMA: CH1: PC6<1>,  CH2: PC7<1>,  Gpioc
+    HRTIM_TIMB: CH1: PC8<1>, CH2: PA8<2>, GpioC // This type is not used for in this config so it's ok
+    HRTIM_TIMC: CH1: PA9<2>, CH2: PA10<2>, GpioA
+    HRTIM_TIMD: CH1: PA11<2>, CH2: PA12<2>, GpioA
+    HRTIM_TIME: CH1: PG6<2>,  CH2: PG7<2>,   GpioG
 }
 
 impl<T> sealed::Sealed<T> for () {}
