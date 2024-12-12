@@ -156,10 +156,6 @@ impl HrTimOngoingCalibration {
                 .fltinr2()
                 .write(|w| w.fltsd().bits(flt_divider as u8));
 
-            #[cfg(feature = "stm32h7")]
-            let please_dont_forget_to_remove_this_once_pac_is_fixed = ();
-
-            #[cfg(not(feature = "stm32h7"))]
             common.eecr3().write(|w| w.eevsd().bits(eev_divider as u8));
 
             #[cfg(feature = "stm32g4")]
