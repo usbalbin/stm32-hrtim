@@ -111,7 +111,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced(pin_a, &mut rcc)
+        .pwm_advanced(pin_a)
         .prescaler(prescaler)
         .eev_cfg(EevCfgs::default().eev4(EevCfg::default()))
         .period(0xFFFF)
