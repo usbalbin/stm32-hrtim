@@ -178,7 +178,7 @@ pub trait HrPwmAdvExt: Sized {
         self,
         _pins: PINS,
         rcc: &mut Rcc,
-    ) -> HrPwmBuilder<Self, Pscl128, Self::PreloadSource, PINS>
+    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
         PINS: ToHrOut<Self>;
 }
@@ -551,7 +551,7 @@ macro_rules! hrtim_hal {
                     self,
                     pins: PINS,
                     _rcc: &mut Rcc,
-                ) -> HrPwmBuilder<Self, Pscl128, Self::PreloadSource, PINS>
+                ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
                 where
                     PINS: ToHrOut<$TIMX>,
                 {
@@ -705,7 +705,7 @@ impl HrPwmAdvExt for HRTIM_MASTER {
         self,
         pins: PINS,
         _rcc: &mut Rcc,
-    ) -> HrPwmBuilder<Self, Pscl128, Self::PreloadSource, PINS>
+    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
         PINS: ToHrOut<HRTIM_MASTER>,
     {
@@ -815,6 +815,13 @@ macro_rules! impl_pscl {
     )+};
 }
 
+#[cfg(any(feature = "stm32f3", feature = "stm32g4"))]
+pub type PsclDefault = Pscl128;
+
+#[cfg(feature = "stm32h7")]
+pub type PsclDefault = Pscl4;
+
+#[cfg(any(feature = "stm32f3", feature = "stm32g4"))]
 impl_pscl! {
     Pscl1   => 0b000,   1, 0x0060, 0xFFDF
     Pscl2   => 0b001,   2, 0x0030, 0xFFEF
@@ -824,6 +831,13 @@ impl_pscl! {
     Pscl32  => 0b101,  32, 0x0003, 0xFFFD
     Pscl64  => 0b110,  64, 0x0003, 0xFFFD
     Pscl128 => 0b111, 128, 0x0003, 0xFFFD
+}
+
+#[cfg(feature = "stm32h7")]
+impl_pscl! {
+    Pscl1 => 0b101, 1, 0x0003, 0xFFFD
+    Pscl2 => 0b110, 2, 0x0003, 0xFFFD
+    Pscl4 => 0b111, 4, 0x0003, 0xFFFD
 }
 
 /*
