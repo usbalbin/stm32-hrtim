@@ -17,19 +17,30 @@ use stm32::HRTIM_COMMON;
 use super::{external_event::EevInputs, fault::FaultInputs};
 
 pub trait HrControltExt {
-    #[cfg(feature = "stm32h7")]
-    fn hr_control(self, _rcc: hal::rcc::rec::Hrtim) -> HrTimOngoingCalibration;
+    fn hr_control(
+        self,
+        #[cfg(feature = "stm32f3")] _clocks: &hal::rcc::Clocks,
+        #[cfg(feature = "stm32f3")] apb2: &mut hal::rcc::APB2,
 
-    #[cfg(not(feature = "stm32h7"))]
-    fn hr_control(self, _rcc: &mut hal::rcc::Rcc) -> HrTimOngoingCalibration;
+        #[allow(unused_variables)]
+        #[cfg(feature = "stm32g4")]
+        rcc: &mut hal::rcc::Rcc,
+
+        #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
+    ) -> HrTimOngoingCalibration;
 }
 
 impl HrControltExt for HRTIM_COMMON {
-    fn hr_control(self, 
-        #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
+    fn hr_control(
+        self,
+        #[cfg(feature = "stm32f3")] _clocks: &hal::rcc::Clocks,
+        #[cfg(feature = "stm32f3")] apb2: &mut hal::rcc::APB2,
 
         #[allow(unused_variables)]
-        #[cfg(not(feature = "stm32h7"))] rcc: &mut hal::rcc::Rcc,
+        #[cfg(feature = "stm32g4")]
+        rcc: &mut hal::rcc::Rcc,
+
+        #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
     ) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
@@ -41,7 +52,7 @@ impl HrControltExt for HRTIM_COMMON {
 
             #[cfg(feature = "stm32f3")]
             {
-                &mut rcc.apb2
+                apb2
             }
 
             #[cfg(feature = "stm32h7")]
