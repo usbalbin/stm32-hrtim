@@ -19,14 +19,14 @@ jobs:
           - stm32f334x6
           - stm32f334x8
 
-          #- stm32h742
-          #- stm32h743
-          ##- stm32h745
-          ##- stm32h747
-          #- stm32h750
-          #- stm32h753
-          ##- stm32h755
-          ##- stm32h757
+          - stm32h742
+          - stm32h743
+          #- stm32h745
+          - stm32h747cm7
+          - stm32h750
+          - stm32h753
+          #- stm32h755
+          #- stm32h757
 
           - stm32g474
           - stm32g484
