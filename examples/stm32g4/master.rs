@@ -107,8 +107,8 @@ fn main() -> ! {
     defmt::info!("Running");
 
     loop {
-        // Step frequency from 18kHz to about 180kHz(half of that when only looking at one pin)
-        for i in 1..10 {
+        // Step frequency from 15kHz to about 146kHz(half of that when only looking at one pin)
+        for i in 1..=10 {
             let new_period = u16::MAX / i;
 
             mcr1.set_duty(new_period / 3);

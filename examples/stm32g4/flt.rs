@@ -84,23 +84,15 @@ fn main() -> ! {
         .pwm_advanced(pin_a)
         .prescaler(prescaler)
         .period(0xFFFF)
-        //.with_fault_source(fault_source1)
-        //.with_fault_source(fault_source2)
-        .with_fault_source(fault_source3) // Set fault source
-        //.with_fault_source(fault_source4)
-        //.with_fault_source(fault_source5)
-        //.with_fault_source(fault_source6)
+        .with_fault_source(fault_source3)
         .fault_action1(FaultAction::ForceInactive)
         .fault_action2(FaultAction::ForceInactive)
-        // alternated every period with one being
-        // inactive and the other getting to output its wave form
-        // as normal
         .finalize(&mut hr_control);
 
     out.enable_rst_event(&cr1); // Set low on compare match with cr1
     out.enable_set_event(&timer); // Set high at new period
     cr1.set_duty(timer.get_period() / 3);
-    //unsafe {((HRTIM_COMMON::ptr() as *mut u8).offset(0x14) as *mut u32).write_volatile(1); }
+
     out.enable();
     timer.start(&mut hr_control.control);
 

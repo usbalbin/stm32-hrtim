@@ -36,9 +36,7 @@ fn main() -> ! {
     // since HRTIMSEL is set to take the HRTIM's clock directly from the core clock. The
     // stm32h7 devices' HRTIM does not have a DLL, also leading to an effective HRTIM
     // frequency of 240MHz...
-    let ccdr = rcc
-        .sys_ck(240.MHz())
-        .freeze(pwrcfg, &dp.SYSCFG);
+    let ccdr = rcc.sys_ck(240.MHz()).freeze(pwrcfg, &dp.SYSCFG);
 
     // Acquire the GPIO peripherals. This also enables the clock for
     // the GPIOs in the RCC register.
