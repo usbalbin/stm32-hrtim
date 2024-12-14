@@ -4,6 +4,7 @@
 /// Example showcasing the use of the HRTIM peripheral together with a comparator to implement a current fault.
 /// Once the comparator input exceeds the reference set by the DAC, the output is forced low and put into a fault state.
 use cortex_m_rt::entry;
+use fugit::ExtU32 as _;
 use panic_probe as _;
 use stm32_hrtim::{
     compare_register::HrCompareRegister,
@@ -18,7 +19,7 @@ use stm32g4xx_hal::{
     adc::AdcClaim,
     comparator::{self, ComparatorExt, ComparatorSplit},
     dac::{Dac3IntSig1, DacExt, DacOut},
-    delay::SYSTDelayExt,
+    delay::{DelayExt as _, SYSTDelayExt},
     gpio::GpioExt,
     pwr::PwrExt,
     rcc::{self, RccExt},
@@ -88,8 +89,8 @@ fn main() -> ! {
         .polarity(hal::pwm::Polarity::ActiveHigh)
         .finalize(&mut hr_control);
 
-    // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 1.2GHz
-    // With max the max period set, this would be 1.2GHz/2^16 ~= 18kHz...
+    // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 960MHz
+    // With max the max period set, this would be 960MHz/2^16 ~= 15kHz...
     let prescaler = Pscl4;
 
     let pin_a = gpioa.pa8;
@@ -126,7 +127,7 @@ fn main() -> ! {
     out1.enable_rst_event(&cr1); // Set low on compare match with cr1
     out1.enable_set_event(&timer); // Set high at new period
     cr1.set_duty(timer.get_period() / 3);
-    //unsafe {((HRTIM_COMMON::ptr() as *mut u8).offset(0x14) as *mut u32).write_volatile(1); }
+
     out1.enable();
     timer.start(&mut hr_control.control);
 
@@ -134,7 +135,7 @@ fn main() -> ! {
 
     loop {
         for _ in 0..5 {
-            //delay.delay(500_u32.millis());
+            delay.delay(500_u32.millis());
             defmt::info!(
                 "State: {:?}, comp: {}, is_fault_active: {}, pc1: {}",
                 out1.get_state(),
