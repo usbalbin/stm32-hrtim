@@ -5,12 +5,12 @@ use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
     compare_register::HrCompareRegister, control::HrControltExt, output::HrOutput, timer::HrTimer,
-    HrParts, HrPwmAdvExt, Pscl4,
+    HrParts, HrPwmAdvExt, Pscl1,
 };
 use stm32h7xx_hal::{
-    prelude::_embedded_hal_blocking_delay_DelayMs,
     delay::DelayExt,
     gpio::GpioExt,
+    prelude::_embedded_hal_blocking_delay_DelayMs,
     pwr::PwrExt,
     rcc::RccExt,
     stm32::{CorePeripherals, Peripherals},
@@ -31,7 +31,14 @@ fn main() -> ! {
 
     // Constrain and Freeze clock
     let rcc = dp.RCC.constrain();
-    let ccdr = rcc.sys_ck(320.MHz()).freeze(pwrcfg, &dp.SYSCFG);
+
+    // With a sys_ck of 240MHz and d1cpre of 1 if the HRTIM will be fed by 240MHz/1 = 240MHz
+    // since HRTIMSEL is set to take the HRTIM's clock directly from the core clock. The
+    // stm32h7 devices' HRTIM does not have a DLL, also leading to an effective HRTIM
+    // frequency of 240MHz...
+    let ccdr = rcc
+        .sys_ck(240.MHz())
+        .freeze(pwrcfg, &dp.SYSCFG);
 
     // Acquire the GPIO peripherals. This also enables the clock for
     // the GPIOs in the RCC register.
@@ -40,9 +47,9 @@ fn main() -> ! {
     // Get the delay provider.
     let mut delay = cp.SYST.delay(ccdr.clocks);
 
-    // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 960MHz
-    // With max the max period set, this would be 960MHz/2^16 ~= 15kHz...
-    let prescaler = Pscl4;
+    // ...with a prescaler of 1 this gives us a HrTimer with a tick rate of 240MHz
+    // With max the max period set, this would be 240MHz/2^16 ~= 3.7kHz...
+    let prescaler = Pscl1;
 
     let pin_a = gpioc.pc6.into_input();
     let pin_b = gpioc.pc7.into_input();
@@ -61,7 +68,7 @@ fn main() -> ! {
     //        .               .               .               .
     let (hr_control, ..) = dp
         .HRTIM_COMMON
-        .hr_control(ccdr.peripheral.HRTIM)
+        .hr_control(&ccdr.clocks, ccdr.peripheral.HRTIM)
         .wait_for_calibration();
     let mut hr_control = hr_control.constrain();
 
@@ -91,7 +98,7 @@ fn main() -> ! {
     out2.enable();
 
     loop {
-        // Step frequency from 18kHz to about 180kHz(half of that when only looking at one pin)
+        // Step frequency from 3.7kHz to about 36.6kHz(half of that when only looking at one pin)
         for i in 1..10 {
             let new_period = u16::MAX / i;
 

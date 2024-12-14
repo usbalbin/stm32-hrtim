@@ -27,8 +27,6 @@ fn main() -> ! {
     let mut rcc = dp.RCC.constrain();
     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
 
-    //let mut rcc = Input to hrtim needs to be 128MHz when using HSI, 128-144 with HSE
-
     // Set system frequency to 64MHz using PLL, PLLCLKx2 will thus be 128MHz which
     // feeds into the HRTIM. This and the HRTIM's DLL would lead to an effective
     // HRTIM frequency of 128MHz * 32 = 4.096GHz...
@@ -40,8 +38,8 @@ fn main() -> ! {
 
     let mut delay = Delay::new(cp.SYST, clocks);
 
-    // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 960MHz
-    // With max the max period set, this would be 960MHz/2^16 ~= 15kHz...
+    // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 1024MHz
+    // With max the max period set, this would be 1024MHz/2^16 ~= 15.6kHz...
     let prescaler = Pscl4;
 
     let pin_a = gpioa.pa8;
@@ -96,8 +94,8 @@ fn main() -> ! {
     out2.enable();
 
     loop {
-        // Step frequency from 18kHz to about 180kHz(half of that when only looking at one pin)
-        for i in 1..10 {
+        // Step frequency from 15.6kHz to about 156kHz(half of that when only looking at one pin)
+        for i in 1..=10 {
             let new_period = u16::MAX / i;
 
             cr1.set_duty(new_period / 3);

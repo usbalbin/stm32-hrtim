@@ -26,6 +26,7 @@ pub trait HrControltExt {
         #[cfg(feature = "stm32g4")]
         rcc: &mut hal::rcc::Rcc,
 
+        #[cfg(feature = "stm32h7")] _clocks: &hal::rcc::CoreClocks,
         #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
     ) -> HrTimOngoingCalibration;
 }
@@ -40,6 +41,7 @@ impl HrControltExt for HRTIM_COMMON {
         #[cfg(feature = "stm32g4")]
         rcc: &mut hal::rcc::Rcc,
 
+        #[cfg(feature = "stm32h7")] _clocks: &hal::rcc::CoreClocks,
         #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
     ) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
@@ -57,6 +59,11 @@ impl HrControltExt for HRTIM_COMMON {
 
             #[cfg(feature = "stm32h7")]
             {
+                {
+                    let rcc = unsafe { &*hal::stm32::RCC::ptr() };
+                    // Same clock source as CPU
+                    rcc.cfgr().modify(|_, w| w.hrtimsel().c_ck());
+                }
                 rcc
             }
         };
