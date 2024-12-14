@@ -40,7 +40,7 @@ fn main() -> ! {
     let mut delay = cp.SYST.delay(&rcc.clocks);
 
     // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 960MHz
-    // With max the max period set, this would be 960MHz/2^16 ~= 15kHz...
+    // With max the max period set, this would be 960MHz/2^16 ~= 14.6kHz...
     let prescaler = Pscl4;
 
     let gpioa = dp.GPIOA.split(&mut rcc);
@@ -88,8 +88,8 @@ fn main() -> ! {
     out2.enable();
 
     loop {
-        // Step frequency from 18kHz to about 180kHz(half of that when only looking at one pin)
-        for i in 1..10 {
+        // Step frequency from 14.6kHz to about 146kHz(half of that when only looking at one pin)
+        for i in 1..=10 {
             let new_period = u16::MAX / i;
 
             cr1.set_duty(new_period / 3);
