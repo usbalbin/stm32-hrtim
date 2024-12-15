@@ -77,6 +77,7 @@ impl HrControltExt for HRTIM_COMMON {
         rcc.enable().reset();
 
         // Start calibration procedure
+        #[cfg(not(feature = "stm32h7"))]
         common
             .dllcr()
             .write(|w| w.cal().set_bit().calen().clear_bit());
@@ -173,6 +174,7 @@ impl HrTimOngoingCalibration {
             // Enable periodic calibration
             // with f_hrtim at 170MHz, these settings leads to
             // a period of about 6.2ms
+            #[cfg(not(feature = "stm32h7"))]
             common
                 .dllcr()
                 .modify(|_r, w| w.calrte().bits(0b00).cal().set_bit().calen().clear_bit());
@@ -215,9 +217,12 @@ impl HrTimOngoingCalibration {
     }
 
     pub fn wait_for_calibration(self) -> (HrTimCalibrated, FaultInputs, EevInputs) {
-        let common = unsafe { &*HRTIM_COMMON::ptr() };
-        while common.isr().read().dllrdy().bit_is_clear() {
-            // Wait until ready
+        #[cfg(not(feature = "stm32h7"))]
+        {
+            let common = unsafe { &*HRTIM_COMMON::ptr() };
+            while common.isr().read().dllrdy().bit_is_clear() {
+                // Wait until ready
+            }
         }
 
         // Calibration is now done, it is safe to continue
