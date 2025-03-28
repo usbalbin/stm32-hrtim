@@ -1,12 +1,7 @@
-use super::timer;
-
-#[cfg(feature = "hrtim_v2")]
-use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use super::timer::{self, InstanceX};
+pub use super::timer::{Ch1, Ch2, ChExt};
+use crate::ext::{CptcrW, MasterExt, TimExt};
 use core::marker::PhantomData;
-
-pub struct Ch1;
-pub struct Ch2;
 
 pub struct Dma;
 pub struct NoDma;
@@ -161,108 +156,84 @@ pub fn dma_value_to_signed(x: u32, #[allow(unused_variables)] period: u16) -> i3
     }
 }
 
-macro_rules! impl_capture {
-    ($($TIMX:ident),+) => {$(
-        impl_capture!($TIMX: Ch1, cpt1r, cpt1cr, cpt1, cpt1ie, cpt1de, cpt1c);
-        impl_capture!($TIMX: Ch2, cpt2r, cpt2cr, cpt2, cpt2ie, cpt2de, cpt2c);
-    )+};
+impl<TIM: InstanceX, CH: ChExt, PSCL> HrCapt<TIM, PSCL, CH, NoDma> {
+    /// Add event to capture
+    ///
+    /// If multiple events are added, they will be ORed together meaning
+    /// that a capture will be trigger if any one of the events triggers
+    pub fn add_event<E: CaptureEvent<TIM, PSCL>>(&mut self, _event: &E) {
+        let tim = unsafe { &*TIM::ptr() };
 
-    ($TIMX:ident: $CH:ident, $cptXr:ident, $cptXcr:ident, $cptX:ident, $cptXie:ident, $cptXde:ident, $cptXc:ident) => {
-        impl<PSCL> HrCapt<$TIMX, PSCL, $CH, NoDma> {
-            /// Add event to capture
-            ///
-            /// If multiple events are added, they will be ORed together meaning
-            /// that a capture will be trigger if any one of the events triggers
-            pub fn add_event<E: CaptureEvent<$TIMX, PSCL>>(&mut self, _event: &E) {
-                let tim = unsafe { &*$TIMX::ptr() };
-
-                // SAFETY: We are the only one with access to cptXYcr
-                unsafe {
-                    tim.$cptXcr().modify(|r, w| w.bits(r.bits() | E::BITS));
-                }
-            }
-
-            /// Remove event to capture
-            pub fn remove_event<E: CaptureEvent<$TIMX, PSCL>>(&mut self, _event: &E) {
-                let tim = unsafe { &*$TIMX::ptr() };
-
-                // SAFETY: We are the only one with access to cptXYcr
-                unsafe {
-                    tim.$cptXcr().modify(|r, w| w.bits(r.bits() & !E::BITS));
-                }
-            }
-
-            /// Force capture trigger now
-            pub fn trigger_now(&mut self) {
-                // SAFETY: We are the only one with access to cptXYcr
-                let tim = unsafe { &*$TIMX::ptr() };
-
-                tim.$cptXcr().modify(|_, w| w.swcpt().set_bit());
-            }
-
-            // TODO: It would be sufficient to instead of hr_control only require exclusive access to the owning timer
-            // however that would be hard to do since typically the capture device is a field of that same timer.
-            // Would it make more sense to have this method direcly on HrTim instead?
-            pub fn enable_interrupt(&mut self, enable: bool, _hr_control: &mut super::HrPwmControl) {
-                let tim = unsafe { &*$TIMX::ptr() };
-
-                tim.dier().modify(|_r, w| w.$cptXie().bit(enable));
-            }
-
-            pub fn enable_dma(self, _ch: timer::DmaChannel<$TIMX>) -> HrCapt<$TIMX, PSCL, $CH, Dma> {
-                // SAFETY: We own the only insance of this timers dma channel, no one else can do this
-                let tim = unsafe { &*$TIMX::ptr() };
-                tim.dier().modify(|_r, w| w.$cptXde().set_bit());
-                HrCapt {
-                    _x: PhantomData
-                }
-            }
+        // SAFETY: We are the only one with access to cptXYcr
+        unsafe {
+            tim.cptcr(CH::CH).modify(|r, w| w.bits(r.bits() | E::BITS));
         }
+    }
 
-        impl<PSCL, DMA> HrCapture for HrCapt<$TIMX, PSCL, $CH, DMA> {
-            fn get_last(&self) -> (u16, CountingDirection) {
-                let tim = unsafe { &*$TIMX::ptr() };
-                let data = tim.$cptXr().read();
+    /// Remove event to capture
+    pub fn remove_event<E: CaptureEvent<TIM, PSCL>>(&mut self, _event: &E) {
+        let tim = unsafe { &*TIM::ptr() };
 
-                #[cfg(feature = "hrtim_v2")]
-                let dir = match data.dir().bit() {
-                    true => CountingDirection::Down,
-                    false => CountingDirection::Up,
-                };
-                #[cfg(any(feature = "hrtim_v1", feature = "hrtim_v1_1"))]
-                let dir = CountingDirection::Up;
-
-                let value = data.cpt().bits();
-
-                (value, dir)
-            }
-
-            fn clear_interrupt(&mut self) {
-                let tim = unsafe { &*$TIMX::ptr() };
-
-                // No need for exclusive access since this is a write only register
-                tim.icr().write(|w| w.$cptXc().clear());
-            }
-
-            fn is_pending(&self) -> bool {
-                let tim = unsafe { &*$TIMX::ptr() };
-
-                // No need for exclusive access since this is a read only register
-                tim.isr().read().$cptX().bit()
-            }
+        // SAFETY: We are the only one with access to cptXYcr
+        unsafe {
+            tim.cptcr(CH::CH).modify(|r, w| w.bits(r.bits() & !E::BITS));
         }
-    };
+    }
+
+    /// Force capture trigger now
+    pub fn trigger_now(&mut self) {
+        // SAFETY: We are the only one with access to cptXYcr
+        let tim = unsafe { &*TIM::ptr() };
+
+        tim.cptcr(CH::CH).modify(|_, w| w.set_swcpt());
+    }
+
+    // TODO: It would be sufficient to instead of hr_control only require exclusive access to the owning timer
+    // however that would be hard to do since typically the capture device is a field of that same timer.
+    // Would it make more sense to have this method direcly on HrTim instead?
+    pub fn enable_interrupt(&mut self, enable: bool, _hr_control: &mut super::HrPwmControl) {
+        let tim = unsafe { &*TIM::ptr() };
+
+        tim.dier().modify(|_r, w| w.cptie(CH::CH as _).bit(enable));
+    }
+
+    pub fn enable_dma(self, _ch: timer::DmaChannel<TIM>) -> HrCapt<TIM, PSCL, CH, Dma> {
+        // SAFETY: We own the only insance of this timers dma channel, no one else can do this
+        let tim = unsafe { &*TIM::ptr() };
+        tim.dier().modify(|_r, w| w.cptde(CH::CH as _).set_bit());
+        HrCapt { _x: PhantomData }
+    }
 }
 
-impl_capture! {
-    HRTIM_TIMA,
-    HRTIM_TIMB,
-    HRTIM_TIMC,
-    HRTIM_TIMD,
-    HRTIM_TIME
-}
+impl<TIM: InstanceX, CH: ChExt, PSCL, DMA> HrCapture for HrCapt<TIM, PSCL, CH, DMA> {
+    fn get_last(&self) -> (u16, CountingDirection) {
+        let tim = unsafe { &*TIM::ptr() };
+        let data = tim.cptr(CH::CH).read();
 
-#[cfg(feature = "hrtim_v2")]
-impl_capture! {
-    HRTIM_TIMF
+        #[cfg(feature = "hrtim_v2")]
+        let dir = match data.dir().bit() {
+            true => CountingDirection::Down,
+            false => CountingDirection::Up,
+        };
+        #[cfg(any(feature = "hrtim_v1", feature = "hrtim_v1_1"))]
+        let dir = CountingDirection::Up;
+
+        let value = data.cpt().bits();
+
+        (value, dir)
+    }
+
+    fn clear_interrupt(&mut self) {
+        let tim = unsafe { &*TIM::ptr() };
+
+        // No need for exclusive access since this is a write only register
+        tim.icr().write(|w| w.cptc(CH::CH as _).clear());
+    }
+
+    fn is_pending(&self) -> bool {
+        let tim = unsafe { &*TIM::ptr() };
+
+        // No need for exclusive access since this is a read only register
+        tim.isr().read().cpt(CH::CH as _).bit()
+    }
 }
