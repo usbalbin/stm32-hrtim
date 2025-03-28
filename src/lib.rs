@@ -36,6 +36,7 @@ pub mod compare_register;
 pub mod control;
 pub mod deadtime;
 pub mod event;
+pub mod ext;
 pub mod external_event;
 pub mod fault;
 pub mod output;
@@ -93,6 +94,7 @@ use self::deadtime::DeadtimeConfig;
 use self::output::ToHrOut;
 use self::timer_eev_cfg::EevCfgs;
 
+use timer::{Instance, InstanceX};
 /// Internal enum that keeps track of the count settings before PWM is finalized
 enum CountSettings {
     //Frequency(Hertz),
@@ -115,7 +117,7 @@ pub enum HrCountingDirection {
     ///  Counting up   *  |               *  |
     ///             *                  *
     ///          *        |         *        |
-    ///       *                  *           
+    ///       *                  *
     ///    *              |   *              |
     /// *                  *
     /// --------------------------------------
@@ -142,7 +144,7 @@ pub enum HrCountingDirection {
     ///                   *        |        *                 *        |
     ///                *                       *           *
     ///             *              |              *     *              |
-    /// 0     -->*                                   *                  
+    /// 0     -->*                                   *
     /// ---------------------------------------------------------------------------
     ///          |         *---------------*         |         *---------------*
     ///                    |       |       |                   |       |       |
@@ -465,244 +467,100 @@ macro_rules! hrtim_finalize_body {
         }
     }};
 }
+impl<TIM: Instance + HrPwmAdvExt, PSCL, PINS> HrPwmBuilder<TIM, PSCL, TIM::PreloadSource, PINS>
+where
+    PSCL: HrtimPrescaler,
+    PINS: ToHrOut<TIM>,
+{
+    /// Set the prescaler; PWM count runs at base_frequency/(prescaler+1)
+    pub fn prescaler<P>(self, _prescaler: P) -> HrPwmBuilder<TIM, P, TIM::PreloadSource, PINS>
+    where
+        P: HrtimPrescaler,
+    {
+        let HrPwmBuilder {
+            _tim,
+            _prescaler: _,
+            pins,
+            timer_mode,
+            fault_enable_bits,
+            fault1_bits,
+            fault2_bits,
+            enable_push_pull,
+            interleaved_mode,
+            counting_direction,
+            //base_freq,
+            count,
+            preload_source,
+            repetition_counter,
+            deadtime,
+            enable_repetition_interrupt,
+            eev_cfg,
+            out1_polarity,
+            out2_polarity,
+        } = self;
 
-macro_rules! hrtim_common_methods {
-    ($TIMX:ident, $PS:ident) => {
-        /// Set the prescaler; PWM count runs at base_frequency/(prescaler+1)
-        pub fn prescaler<P>(self, _prescaler: P) -> HrPwmBuilder<$TIMX, P, $PS, PINS>
-        where
-            P: HrtimPrescaler,
-        {
-            let HrPwmBuilder {
-                _tim,
-                _prescaler: _,
-                pins,
-                timer_mode,
-                fault_enable_bits,
-                fault1_bits,
-                fault2_bits,
-                enable_push_pull,
-                interleaved_mode,
-                counting_direction,
-                //base_freq,
-                count,
-                preload_source,
-                repetition_counter,
-                deadtime,
-                enable_repetition_interrupt,
-                eev_cfg,
-                out1_polarity,
-                out2_polarity,
-            } = self;
+        let period = match count {
+            CountSettings::Period(period) => period,
+        };
 
-            let period = match count {
-                CountSettings::Period(period) => period,
-            };
+        let count = CountSettings::Period(period);
 
-            let count = CountSettings::Period(period);
-
-            HrPwmBuilder {
-                _tim,
-                _prescaler: PhantomData,
-                pins,
-                timer_mode,
-                fault_enable_bits,
-                fault1_bits,
-                fault2_bits,
-                enable_push_pull,
-                interleaved_mode,
-                counting_direction,
-                //base_freq,
-                count,
-                preload_source,
-                repetition_counter,
-                deadtime,
-                enable_repetition_interrupt,
-                eev_cfg,
-                out1_polarity,
-                out2_polarity,
-            }
+        HrPwmBuilder {
+            _tim,
+            _prescaler: PhantomData,
+            pins,
+            timer_mode,
+            fault_enable_bits,
+            fault1_bits,
+            fault2_bits,
+            enable_push_pull,
+            interleaved_mode,
+            counting_direction,
+            //base_freq,
+            count,
+            preload_source,
+            repetition_counter,
+            deadtime,
+            enable_repetition_interrupt,
+            eev_cfg,
+            out1_polarity,
+            out2_polarity,
         }
+    }
 
-        pub fn timer_mode(mut self, timer_mode: HrTimerMode) -> Self {
-            self.timer_mode = timer_mode;
-            self
-        }
+    pub fn timer_mode(mut self, timer_mode: HrTimerMode) -> Self {
+        self.timer_mode = timer_mode;
+        self
+    }
 
-        // TODO: Allow setting multiple?
-        pub fn preload(mut self, preload_source: $PS) -> Self {
-            self.preload_source = Some(preload_source);
-            self
-        }
+    // TODO: Allow setting multiple?
+    pub fn preload(mut self, preload_source: TIM::PreloadSource) -> Self {
+        self.preload_source = Some(preload_source);
+        self
+    }
 
-        /// Set the period; PWM count runs from 0 to period, repeating every (period+1) counts
-        pub fn period(mut self, period: u16) -> Self {
-            self.count = CountSettings::Period(period);
-            self
-        }
+    /// Set the period; PWM count runs from 0 to period, repeating every (period+1) counts
+    pub fn period(mut self, period: u16) -> Self {
+        self.count = CountSettings::Period(period);
+        self
+    }
 
-        /// Set repetition counter, useful to reduce interrupts generated
-        /// from timer by a factor (repetition_counter + 1)
-        pub fn repetition_counter(mut self, repetition_counter: u8) -> Self {
-            self.repetition_counter = repetition_counter;
-            self
-        }
+    /// Set repetition counter, useful to reduce interrupts generated
+    /// from timer by a factor (repetition_counter + 1)
+    pub fn repetition_counter(mut self, repetition_counter: u8) -> Self {
+        self.repetition_counter = repetition_counter;
+        self
+    }
 
-        pub fn enable_repetition_interrupt(mut self) -> Self {
-            self.enable_repetition_interrupt = true;
-            self
-        }
+    pub fn enable_repetition_interrupt(mut self) -> Self {
+        self.enable_repetition_interrupt = true;
+        self
+    }
 
-        pub fn eev_cfg(mut self, eev_cfg: EevCfgs<$TIMX>) -> Self {
-            self.eev_cfg = eev_cfg;
-            self
-        }
-    };
-}
-
-// Implement PWM configuration for timer
-macro_rules! hrtim_hal {
-    ($($TIMX:ident: $($out:ident)*,)+) => {
-        $(
-            impl HrPwmAdvExt for $TIMX {
-                type PreloadSource = PreloadSource;
-
-                fn pwm_advanced<PINS>(
-                    self,
-                    pins: PINS,
-                ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
-                where
-                    PINS: ToHrOut<$TIMX>,
-                {
-                    // TODO: That 32x factor... Is that included below, or should we
-                    // do that? Also that will likely risk overflowing u32 since
-                    // 170MHz * 32 = 5.44GHz > u32::MAX.Hz()
-                    //let clk = HertzU64::from(HRTIM_COMMON::get_timer_frequency(&rcc.clocks)) * 32;
-
-                    HrPwmBuilder {
-                        _tim: PhantomData,
-                        _prescaler: PhantomData,
-                        pins,
-                        timer_mode: HrTimerMode::Continuous,
-                        fault_enable_bits: 0b000000,
-                        fault1_bits: 0b00,
-                        fault2_bits: 0b00,
-                        counting_direction: HrCountingDirection::Up,
-                        //base_freq: clk,
-                        count: CountSettings::Period(u16::MAX),
-                        preload_source: None,
-                        enable_push_pull: false,
-                        interleaved_mode: InterleavedMode::Disabled,
-                        repetition_counter: 0,
-                        deadtime: None,
-                        enable_repetition_interrupt: false,
-                        eev_cfg: EevCfgs::default(),
-                        out1_polarity: Polarity::ActiveHigh,
-                        out2_polarity: Polarity::ActiveHigh,
-                    }
-                }
-            }
-
-            impl<PSCL, PINS>
-                HrPwmBuilder<$TIMX, PSCL, PreloadSource, PINS>
-            where
-                PSCL: HrtimPrescaler,
-                PINS: ToHrOut<$TIMX>,
-            {
-                // For HAL writers:
-                // Make sure to connect gpios after calling this function and then it should be safe to
-                // conjure an instance of HrParts<$TIMX, PSCL, PINS::Out<PSCL>>
-                pub fn _init(self, _control: &mut HrPwmControl) -> PINS {
-                    hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*]);
-                    self.pins
-                }
-
-                hrtim_common_methods!($TIMX, PreloadSource);
-
-                pub fn with_fault_source<FS>(mut self, _fault_source: FS) -> Self
-                    where FS: FaultSource
-                {
-                    self.fault_enable_bits |= FS::ENABLE_BITS;
-
-                    self
-                }
-
-                pub fn fault_action1(mut self, fault_action1: FaultAction) -> Self {
-                    self.fault1_bits = fault_action1 as _;
-
-                    self
-                }
-
-                pub fn fault_action2(mut self, fault_action2: FaultAction) -> Self {
-                    self.fault2_bits = fault_action2 as _;
-
-                    self
-                }
-
-                pub fn out1_polarity(mut self, polarity: Polarity) -> Self {
-                    self.out1_polarity = polarity;
-
-                    self
-                }
-
-                pub fn out2_polarity(mut self, polarity: Polarity) -> Self {
-                    self.out2_polarity = polarity;
-
-                    self
-                }
-
-                /// Enable or disable Push-Pull mode
-                ///
-                /// Enabling Push-Pull mode will make output 1 and 2
-                /// alternate every period with one being
-                /// inactive and the other getting to output its wave form
-                /// as normal
-                ///
-                ///         ----           .                ----
-                ///out1    |    |          .               |    |
-                ///        |    |          .               |    |
-                /// --------    ----------------------------    --------------------
-                ///        .                ------         .                ------
-                ///out2    .               |      |        .               |      |
-                ///        .               |      |        .               |      |
-                /// ------------------------    ----------------------------      --
-                ///
-                /// NOTE: setting this will overide any 'Swap Mode' set
-                pub fn push_pull_mode(mut self, enable: bool) -> Self {
-                    // TODO: add check for incompatible modes
-                    self.enable_push_pull = enable;
-
-                    self
-                }
-
-                /// Set counting direction
-                ///
-                /// See [`HrCountingDirection`]
-                pub fn counting_direction(mut self, counting_direction: HrCountingDirection) -> Self {
-                    self.counting_direction = counting_direction;
-
-                    self
-                }
-
-                /// Set interleaved or half modes
-                ///
-                /// NOTE: Check [`InterleavedMode`] for more info about special cases
-                pub fn interleaved_mode(mut self, mode: InterleavedMode) -> Self {
-                    self.interleaved_mode = mode;
-
-                    self
-                }
-
-                pub fn deadtime(mut self, deadtime: DeadtimeConfig) -> Self {
-                    self.deadtime = Some(deadtime);
-
-                    self
-                }
-
-                //pub fn swap_mode(mut self, enable: bool) -> Self
-            }
-        )+
-    };
+    pub fn eev_cfg(mut self, eev_cfg: EevCfgs<TIM>) -> Self {
+        self.eev_cfg = eev_cfg;
+        self
+    }
 }
 
 impl HrPwmAdvExt for HRTIM_MASTER {
@@ -744,18 +602,154 @@ impl HrPwmAdvExt for HRTIM_MASTER {
     }
 }
 
-impl<PSCL, PINS> HrPwmBuilder<HRTIM_MASTER, PSCL, MasterPreloadSource, PINS>
+impl<TIM: InstanceX> HrPwmAdvExt for TIM {
+    type PreloadSource = PreloadSource;
+
+    fn pwm_advanced<PINS>(
+        self,
+        pins: PINS,
+    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
+    where
+        PINS: ToHrOut<TIM>,
+    {
+        // TODO: That 32x factor... Is that included below, or should we
+        // do that? Also that will likely risk overflowing u32 since
+        // 170MHz * 32 = 5.44GHz > u32::MAX.Hz()
+        //let clk = HertzU64::from(HRTIM_COMMON::get_timer_frequency(&rcc.clocks)) * 32;
+
+        HrPwmBuilder {
+            _tim: PhantomData,
+            _prescaler: PhantomData,
+            pins,
+            timer_mode: HrTimerMode::Continuous,
+            fault_enable_bits: 0b000000,
+            fault1_bits: 0b00,
+            fault2_bits: 0b00,
+            counting_direction: HrCountingDirection::Up,
+            //base_freq: clk,
+            count: CountSettings::Period(u16::MAX),
+            preload_source: None,
+            enable_push_pull: false,
+            interleaved_mode: InterleavedMode::Disabled,
+            repetition_counter: 0,
+            deadtime: None,
+            enable_repetition_interrupt: false,
+            eev_cfg: EevCfgs::default(),
+            out1_polarity: Polarity::ActiveHigh,
+            out2_polarity: Polarity::ActiveHigh,
+        }
+    }
+}
+
+impl<TIM: InstanceX, PSCL, PINS> HrPwmBuilder<TIM, PSCL, PreloadSource, PINS>
 where
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<HRTIM_MASTER>,
+    PINS: ToHrOut<TIM>,
 {
-    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, ()> {
-        hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, []);
+    pub fn with_fault_source<FS>(mut self, _fault_source: FS) -> Self
+    where
+        FS: FaultSource,
+    {
+        self.fault_enable_bits |= FS::ENABLE_BITS;
 
-        unsafe { MaybeUninit::uninit().assume_init() }
+        self
     }
 
-    hrtim_common_methods!(HRTIM_MASTER, MasterPreloadSource);
+    pub fn fault_action1(mut self, fault_action1: FaultAction) -> Self {
+        self.fault1_bits = fault_action1 as _;
+
+        self
+    }
+
+    pub fn fault_action2(mut self, fault_action2: FaultAction) -> Self {
+        self.fault2_bits = fault_action2 as _;
+
+        self
+    }
+
+    pub fn out1_polarity(mut self, polarity: Polarity) -> Self {
+        self.out1_polarity = polarity;
+
+        self
+    }
+
+    pub fn out2_polarity(mut self, polarity: Polarity) -> Self {
+        self.out2_polarity = polarity;
+
+        self
+    }
+
+    /// Enable or disable Push-Pull mode
+    ///
+    /// Enabling Push-Pull mode will make output 1 and 2
+    /// alternate every period with one being
+    /// inactive and the other getting to output its wave form
+    /// as normal
+    ///
+    ///         ----           .                ----
+    ///out1    |    |          .               |    |
+    ///        |    |          .               |    |
+    /// --------    ----------------------------    --------------------
+    ///        .                ------         .                ------
+    ///out2    .               |      |        .               |      |
+    ///        .               |      |        .               |      |
+    /// ------------------------    ----------------------------      --
+    ///
+    /// NOTE: setting this will overide any 'Swap Mode' set
+    pub fn push_pull_mode(mut self, enable: bool) -> Self {
+        // TODO: add check for incompatible modes
+        self.enable_push_pull = enable;
+
+        self
+    }
+
+    /// Set counting direction
+    ///
+    /// See [`HrCountingDirection`]
+    pub fn counting_direction(mut self, counting_direction: HrCountingDirection) -> Self {
+        self.counting_direction = counting_direction;
+
+        self
+    }
+
+    /// Set interleaved or half modes
+    ///
+    /// NOTE: Check [`InterleavedMode`] for more info about special cases
+    pub fn interleaved_mode(mut self, mode: InterleavedMode) -> Self {
+        self.interleaved_mode = mode;
+
+        self
+    }
+
+    pub fn deadtime(mut self, deadtime: DeadtimeConfig) -> Self {
+        self.deadtime = Some(deadtime);
+
+        self
+    }
+
+    //pub fn swap_mode(mut self, enable: bool) -> Self
+}
+
+// Implement PWM configuration for timer
+macro_rules! hrtim_hal {
+    ($($TIMX:ident: $($out:ident)*,)+) => {
+        $(
+            impl<PSCL, PINS>
+                HrPwmBuilder<$TIMX, PSCL, PreloadSource, PINS>
+            where
+                PSCL: HrtimPrescaler,
+                PINS: ToHrOut<$TIMX>,
+            {
+                // For HAL writers:
+                // Make sure to connect gpios after calling this function and then it should be safe to
+                // conjure an instance of HrParts<$TIMX, PSCL, PINS::Out<PSCL>>
+                pub fn _init(self, _control: &mut HrPwmControl) -> PINS {
+                    hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*]);
+                    self.pins
+                }
+            }
+        )+
+    };
 }
 
 hrtim_hal! {
@@ -769,6 +763,18 @@ hrtim_hal! {
 #[cfg(feature = "hrtim_v2")]
 hrtim_hal! {
     HRTIM_TIMF: out,
+}
+
+impl<PSCL, PINS> HrPwmBuilder<HRTIM_MASTER, PSCL, MasterPreloadSource, PINS>
+where
+    PSCL: HrtimPrescaler,
+    PINS: ToHrOut<HRTIM_MASTER>,
+{
+    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, ()> {
+        hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, []);
+
+        unsafe { MaybeUninit::uninit().assume_init() }
+    }
 }
 
 /// # Safety

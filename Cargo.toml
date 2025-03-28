@@ -11,7 +11,9 @@ stm32-hrtim = { path = "." }
 
 [dependencies]
 stm32f3 = { git = "https://github.com/stm32-rs/stm32-rs-nightlies", optional = true }
-stm32h7 = { git = "https://github.com/stm32-rs/stm32-rs-nightlies", features = ["critical-section"], optional = true }
+stm32h7 = { git = "https://github.com/stm32-rs/stm32-rs-nightlies", features = [
+    "critical-section",
+], optional = true }
 stm32g4 = { version = "0.22.0", package = "stm32g4-staging", optional = true }
 
 defmt = { version = "0.3.10", optional = true }
@@ -22,7 +24,7 @@ cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 defmt-rtt = "0.4.0"
 cortex-m-rt = "0.7.2"
 panic-probe = { version = "0.3.0", features = ["print-defmt"] }
-stm32g4xx-hal = { git = "https://github.com/usbalbin/stm32g4xx-hal", branch = "hrtim", features = ["defmt", "hrtim"] }
+#stm32g4xx-hal = { git = "https://github.com/usbalbin/stm32g4xx-hal", branch = "hrtim", features = ["defmt", "hrtim"] }
 
 [features]
 default = []
@@ -46,8 +48,8 @@ stm32h753 = ["stm32h7/stm32h753", "hrtim_v1_1"]
 #stm32h755 = ["stm32h7/stm32h755", "hrtim_v1_1"]
 #stm32h757 = ["stm32h7/stm32h757", "hrtim_v1_1"]
 
-stm32g474 = ["stm32g4/stm32g474", "stm32g4xx-hal/stm32g474", "hrtim_v2"]
-stm32g484 = ["stm32g4/stm32g484", "stm32g4xx-hal/stm32g484", "hrtim_v2"]
+stm32g474 = ["stm32g4/stm32g474", "hrtim_v2"]
+stm32g484 = ["stm32g4/stm32g484", "hrtim_v2"]
 defmt = ["dep:defmt", "fugit/defmt"]
 
 # G4

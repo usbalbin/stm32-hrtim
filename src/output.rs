@@ -1,82 +1,81 @@
-#[cfg(feature = "hrtim_v2")]
-use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::{
+    ext::{Chan, TimExt},
+    pac::HRTIM_COMMON,
+    timer::{Ch1, Ch2, ChExt, InstanceX},
+};
 use core::marker::PhantomData;
 
 use super::event::EventSource;
 
-macro_rules! hrtim_out {
-    ($($TIMX:ident: $out_type:ident: $tXYoen:ident, $tXYodis:ident, $tXYods:ident, $setXYr:ident, $rstXYr:ident,)+) => {$(
-        impl<PSCL> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL> {
-            fn enable(&mut self) {
-                let common = unsafe { &*HRTIM_COMMON::ptr() };
-                common.oenr().write(|w| { w.$tXYoen().set_bit() });
-            }
+impl<TIM: InstanceX, PSCL, CH: ChExt> HrOutput<TIM, PSCL> for HrOut<TIM, PSCL, CH> {
+    fn enable(&mut self) {
+        let common = unsafe { &*HRTIM_COMMON::ptr() };
+        common.oenr().write(|w| match CH::CH {
+            Chan::Ch1 => w.t1oen(TIM::T_X as _).set_bit(),
+            Chan::Ch2 => w.t2oen(TIM::T_X as _).set_bit(),
+        });
+    }
 
-            fn disable(&mut self) {
-                let common = unsafe { &*HRTIM_COMMON::ptr() };
-                common.odisr().write(|w| { w.$tXYodis().set_bit() });
-            }
+    fn disable(&mut self) {
+        let common = unsafe { &*HRTIM_COMMON::ptr() };
+        common.odisr().write(|w| match CH::CH {
+            Chan::Ch1 => w.t1odis(TIM::T_X as _).set_bit(),
+            Chan::Ch2 => w.t2odis(TIM::T_X as _).set_bit(),
+        });
+    }
 
-            fn enable_set_event<ES: EventSource<$TIMX, PSCL>>(&mut self, _set_event: &ES) {
-                let tim = unsafe { &*$TIMX::ptr() };
-                unsafe { tim.$setXYr().modify(|r, w| w.bits(r.bits() | ES::BITS)); }
-            }
-            fn disable_set_event<ES: EventSource<$TIMX, PSCL>>(&mut self, _set_event: &ES) {
-                let tim = unsafe { &*$TIMX::ptr() };
-                unsafe { tim.$setXYr().modify(|r, w| w.bits(r.bits() & !ES::BITS)); }
-            }
+    fn enable_set_event<ES: EventSource<TIM, PSCL>>(&mut self, _set_event: &ES) {
+        let tim = unsafe { &*TIM::ptr() };
+        unsafe {
+            tim.set_r(CH::CH).modify(|r, w| w.bits(r.bits() | ES::BITS));
+        }
+    }
+    fn disable_set_event<ES: EventSource<TIM, PSCL>>(&mut self, _set_event: &ES) {
+        let tim = unsafe { &*TIM::ptr() };
+        unsafe {
+            tim.set_r(CH::CH)
+                .modify(|r, w| w.bits(r.bits() & !ES::BITS));
+        }
+    }
 
-            fn enable_rst_event<ES: EventSource<$TIMX, PSCL>>(&mut self, _reset_event: &ES) {
-                let tim = unsafe { &*$TIMX::ptr() };
-                unsafe { tim.$rstXYr().modify(|r, w| w.bits(r.bits() | ES::BITS)); }
-            }
-            fn disable_rst_event<ES: EventSource<$TIMX, PSCL>>(&mut self, _reset_event: &ES) {
-                let tim = unsafe { &*$TIMX::ptr() };
-                unsafe { tim.$rstXYr().modify(|r, w| w.bits(r.bits() & !ES::BITS)); }
-            }
+    fn enable_rst_event<ES: EventSource<TIM, PSCL>>(&mut self, _reset_event: &ES) {
+        let tim = unsafe { &*TIM::ptr() };
+        unsafe {
+            tim.rst_r(CH::CH).modify(|r, w| w.bits(r.bits() | ES::BITS));
+        }
+    }
+    fn disable_rst_event<ES: EventSource<TIM, PSCL>>(&mut self, _reset_event: &ES) {
+        let tim = unsafe { &*TIM::ptr() };
+        unsafe {
+            tim.rst_r(CH::CH)
+                .modify(|r, w| w.bits(r.bits() & !ES::BITS));
+        }
+    }
 
-            fn get_state(&self) -> State {
-                let ods;
-                let oen;
+    fn get_state(&self) -> State {
+        let ods;
+        let oen;
 
-                unsafe {
-                    let common = &*HRTIM_COMMON::ptr();
-                    ods = common.odsr().read().$tXYods().bit_is_set();
-                    oen = common.oenr().read().$tXYoen().bit_is_set();
+        unsafe {
+            let common = &*HRTIM_COMMON::ptr();
+            match CH::CH {
+                Chan::Ch1 => {
+                    ods = common.odsr().read().t1ods(TIM::T_X as _).bit_is_set();
+                    oen = common.oenr().read().t1oen(TIM::T_X as _).bit_is_set();
                 }
-
-                match (oen, ods) {
-                    (true, _) => State::Running,
-                    (false, false) => State::Idle,
-                    (false, true) => State::Fault
+                Chan::Ch2 => {
+                    ods = common.odsr().read().t2ods(TIM::T_X as _).bit_is_set();
+                    oen = common.oenr().read().t2oen(TIM::T_X as _).bit_is_set();
                 }
             }
         }
-    )+};
-}
 
-hrtim_out! {
-    HRTIM_TIMA: HrOut1: ta1oen, ta1odis, ta1ods, set1r, rst1r,
-    HRTIM_TIMA: HrOut2: ta2oen, ta2odis, ta2ods, set2r, rst2r,
-
-    HRTIM_TIMB: HrOut1: tb1oen, tb1odis, tb1ods, set1r, rst1r,
-    HRTIM_TIMB: HrOut2: tb2oen, tb2odis, tb2ods, set2r, rst2r,
-
-    HRTIM_TIMC: HrOut1: tc1oen, tc1odis, tc1ods, set1r, rst1r,
-    HRTIM_TIMC: HrOut2: tc2oen, tc2odis, tc2ods, set2r, rst2r,
-
-    HRTIM_TIMD: HrOut1: td1oen, td1odis, td1ods, set1r, rst1r,
-    HRTIM_TIMD: HrOut2: td2oen, td2odis, td2ods, set2r, rst2r,
-
-    HRTIM_TIME: HrOut1: te1oen, te1odis, te1ods, set1r, rst1r,
-    HRTIM_TIME: HrOut2: te2oen, te2odis, te2ods, set2r, rst2r,
-}
-
-#[cfg(feature = "hrtim_v2")]
-hrtim_out! {
-    HRTIM_TIMF: HrOut1: tf1oen, tf1odis, tf1ods, set1r, rst1r,
-    HRTIM_TIMF: HrOut2: tf2oen, tf2odis, tf2ods, set2r, rst2r,
+        match (oen, ods) {
+            (true, _) => State::Running,
+            (false, false) => State::Idle,
+            (false, true) => State::Fault,
+        }
+    }
 }
 
 pub trait HrOutput<TIM, PSCL> {
@@ -146,8 +145,9 @@ where
     type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
 }
 
-pub struct HrOut1<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
-pub struct HrOut2<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
+pub struct HrOut<TIM, PSCL, CH>(PhantomData<(TIM, PSCL, CH)>);
+pub type HrOut1<TIM, PSCL> = HrOut<TIM, PSCL, Ch1>;
+pub type HrOut2<TIM, PSCL> = HrOut<TIM, PSCL, Ch2>;
 
 unsafe impl<T> ToHrOut<T> for () {
     type Out<PSCL> = ();

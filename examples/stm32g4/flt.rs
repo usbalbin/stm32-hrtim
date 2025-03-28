@@ -16,9 +16,9 @@ use stm32g4xx_hal::{
     delay::{DelayExt, SYSTDelayExt},
     gpio::GpioExt,
     hrtim::{fault::FaultInput, HrControltExt, HrPwmBuilderExt},
+    pac::{CorePeripherals, Peripherals},
     pwr::PwrExt,
     rcc::{self, RccExt},
-    stm32::{CorePeripherals, Peripherals},
     time::ExtU32,
 };
 
