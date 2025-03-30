@@ -24,6 +24,7 @@ fugit = "0.3.7"
 [dev-dependencies]
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 defmt-rtt = "0.4.0"
+defmt-test = "0.3.2"
 cortex-m-rt = "0.7.2"
 panic-probe = { version = "0.3.0", features = ["print-defmt"] }
 
@@ -54,6 +55,20 @@ stm32h753 = ["stm32h7", "stm32h7xx-hal/stm32h753", "hrtim_v1_1"]
 stm32g474 = ["stm32g4", "stm32g4xx-hal/stm32g474", "hrtim_v2"]
 stm32g484 = ["stm32g4", "stm32g4xx-hal/stm32g484", "hrtim_v2"]
 defmt = ["dep:defmt", "fugit/defmt"]
+
+[profile.test]
+opt-level = "s"
+debug = true
+codegen-units = 1
+incremental = false
+lto = true
+
+[[test]]
+name = "tests"
+harness = false
+
+[lib]
+test = false
 
 # F3
 
