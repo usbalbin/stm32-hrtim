@@ -1,5 +1,5 @@
 use super::timer::{self, Ch1, Ch2, ChExt, InstanceX};
-use crate::ext::{Cptcr, MasterExt, TimExt};
+use crate::ext::{CptcrW, MasterExt, TimExt};
 use core::marker::PhantomData;
 
 pub struct Dma;
@@ -184,8 +184,7 @@ impl<TIM: InstanceX, CH: ChExt, PSCL> HrCapt<TIM, PSCL, CH, NoDma> {
         // SAFETY: We are the only one with access to cptXYcr
         let tim = unsafe { &*TIM::ptr() };
 
-        tim.cptcr(CH::CH)
-            .modify(|_, w| <TIM::RB as TimExt>::CPT1CRrs::set_swcpt(w));
+        tim.cptcr(CH::CH).modify(|_, w| w.set_swcpt());
     }
 
     // TODO: It would be sufficient to instead of hr_control only require exclusive access to the owning timer

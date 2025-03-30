@@ -7,7 +7,7 @@ pub use super::ext::{Chan, Cmp};
 use super::{
     capture::{self, HrCapt, HrCapture},
     control::HrPwmCtrl,
-    ext::{MasterDier, MasterExt, MasterIcr, TimExt},
+    ext::{MasterDierW, MasterExt, MasterIcr, TimExt},
     HrtimPrescaler,
 };
 
@@ -254,8 +254,7 @@ impl<TIM: Instance, PSCL: HrtimPrescaler, CPT1, CPT2> HrTimer for HrTim<TIM, PSC
     fn clear_repetition_interrupt(&mut self) {
         let tim = unsafe { &*TIM::ptr() };
 
-        tim.icr()
-            .write(|w| <TIM::RB as MasterExt>::ICRrs::repc(w).clear());
+        tim.icr().write(|w| w.repc().clear());
     }
 
     /// Disable register updates
@@ -300,8 +299,7 @@ impl<TIM: Instance, PSCL, CPT1, CPT2> HrTim<TIM, PSCL, CPT1, CPT2> {
     pub fn enable_repetition_interrupt(&mut self, enable: bool) {
         let tim = unsafe { &*TIM::ptr() };
 
-        tim.dier()
-            .modify(|_r, w| <TIM::RB as MasterExt>::DIERrs::w_repie(w).bit(enable));
+        tim.dier().modify(|_r, w| w.repie().bit(enable));
     }
 }
 
