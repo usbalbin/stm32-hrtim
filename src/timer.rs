@@ -1,6 +1,9 @@
 #[cfg(feature = "hrtim_v2")]
 use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::{
+    pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
+    DacResetTrigger, NoDacTrigger,
+};
 use core::marker::PhantomData;
 
 use super::{
@@ -9,9 +12,10 @@ use super::{
     HrtimPrescaler,
 };
 
-pub struct HrTim<TIM, PSCL, CPT1, CPT2> {
+pub struct HrTim<TIM, PSCL, CPT1, CPT2, DacRst: DacResetTrigger = NoDacTrigger> {
     _timer: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
+    _dac_trg: PhantomData<DacRst>,
     capture_ch1: CPT1,
     capture_ch2: CPT2,
 }
@@ -26,6 +30,7 @@ pub struct DmaChannel<TIM> {
 pub trait HrTimer {
     type Timer;
     type Prescaler: HrtimPrescaler;
+    type DacResetTrigger: DacResetTrigger;
 
     /// Get period of timer in number of ticks
     ///
@@ -91,8 +96,8 @@ pub trait HrSlaveTimer: HrTimer {
     );
 }
 
-pub struct TimerSplitCapture<T, PSCL, CH1, CH2> {
-    pub timer: HrTim<T, PSCL, (), ()>,
+pub struct TimerSplitCapture<T, PSCL, CH1, CH2, DacRst: DacResetTrigger> {
+    pub timer: HrTim<T, PSCL, (), (), DacRst>,
     pub ch1: HrCapt<T, PSCL, CH1, capture::NoDma>,
     pub ch2: HrCapt<T, PSCL, CH2, capture::NoDma>,
 }
@@ -106,7 +111,13 @@ pub trait HrSlaveTimerCpt: HrSlaveTimer {
     fn capture_ch2(&mut self) -> &mut <Self as HrSlaveTimerCpt>::CaptureCh2;
     fn split_capture(
         self,
-    ) -> TimerSplitCapture<Self::Timer, Self::Prescaler, capture::Ch1, capture::Ch2>;
+    ) -> TimerSplitCapture<
+        Self::Timer,
+        Self::Prescaler,
+        capture::Ch1,
+        capture::Ch2,
+        Self::DacResetTrigger,
+    >;
 }
 
 macro_rules! hrtim_timer {
@@ -116,9 +127,10 @@ macro_rules! hrtim_timer {
         $tXudis:ident,
         $(($rstXr:ident))*,
     )+) => {$(
-        impl<PSCL: HrtimPrescaler, CPT1, CPT2> HrTimer for HrTim<$TIMX, PSCL, CPT1, CPT2> {
+        impl<PSCL: HrtimPrescaler, CPT1, CPT2, DacRst: DacResetTrigger> HrTimer for HrTim<$TIMX, PSCL, CPT1, CPT2, DacRst> {
             type Prescaler = PSCL;
             type Timer = $TIMX;
+            type DacResetTrigger = DacRst;
 
             fn get_period(&self) -> u16 {
                 let tim = unsafe { &*$TIMX::ptr() };
@@ -197,7 +209,9 @@ macro_rules! hrtim_timer {
             }
         }
 
-        impl<PSCL, CPT1, CPT2> HrTim<$TIMX, PSCL, CPT1, CPT2> {
+        impl<PSCL, CPT1, CPT2, DacRst> HrTim<$TIMX, PSCL, CPT1, CPT2, DacRst>
+            where DacRst: DacResetTrigger
+        {
             pub fn set_repetition_counter(&mut self, repetition_counter: u8) {
                 let tim = unsafe { &*$TIMX::ptr() };
 
@@ -212,7 +226,9 @@ macro_rules! hrtim_timer {
         }
 
         $(
-            impl<PSCL: HrtimPrescaler, CPT1, CPT2> HrSlaveTimer for HrTim<$TIMX, PSCL, CPT1, CPT2> {
+            impl<PSCL: HrtimPrescaler, CPT1, CPT2, DacRst> HrSlaveTimer for HrTim<$TIMX, PSCL, CPT1, CPT2, DacRst>
+                where DacRst: DacResetTrigger
+            {
                 type CptCh1 = HrCapt<Self::Timer, Self::Prescaler, capture::Ch1, capture::NoDma>;
                 type CptCh2 = HrCapt<Self::Timer, Self::Prescaler, capture::Ch2, capture::NoDma>;
 
@@ -245,7 +261,9 @@ macro_rules! hrtim_timer {
                 }
             }
 
-            impl<PSCL: HrtimPrescaler> HrSlaveTimerCpt for HrTim<$TIMX, PSCL, HrCapt<$TIMX, PSCL, capture::Ch1, capture::NoDma>, HrCapt<$TIMX, PSCL, capture::Ch2, capture::NoDma>> {
+            impl<PSCL, DacRst> HrSlaveTimerCpt for HrTim<$TIMX, PSCL, HrCapt<$TIMX, PSCL, capture::Ch1, capture::NoDma>, HrCapt<$TIMX, PSCL, capture::Ch2, capture::NoDma>, DacRst>
+                where PSCL: HrtimPrescaler, DacRst: DacResetTrigger
+            {
                 type CaptureCh1 = <Self as HrSlaveTimer>::CptCh1;
                 type CaptureCh2 = <Self as HrSlaveTimer>::CptCh2;
 
@@ -259,10 +277,11 @@ macro_rules! hrtim_timer {
                     &mut self.capture_ch2
                 }
 
-                fn split_capture(self) -> TimerSplitCapture<$TIMX, PSCL, capture::Ch1, capture::Ch2> {
+                fn split_capture(self) -> TimerSplitCapture<$TIMX, PSCL, capture::Ch1, capture::Ch2, DacRst> {
                     let HrTim{
                         _timer,
                         _prescaler,
+                        _dac_trg,
                         capture_ch1,
                         capture_ch2,
                     } = self;
@@ -271,6 +290,7 @@ macro_rules! hrtim_timer {
                         timer: HrTim{
                             _timer,
                             _prescaler,
+                            _dac_trg,
                             capture_ch1: (),
                             capture_ch2: (),
                         },
@@ -281,13 +301,17 @@ macro_rules! hrtim_timer {
             }
 
             /// Timer Period event
-            impl<DST, PSCL, CPT1, CPT2> super::event::EventSource<DST, PSCL> for HrTim<$TIMX, PSCL, CPT1, CPT2> {
+            impl<DST, PSCL, CPT1, CPT2, DacRst> super::event::EventSource<DST, PSCL> for HrTim<$TIMX, PSCL, CPT1, CPT2, DacRst>
+                where DacRst: DacResetTrigger
+            {
                 // $rstXr
                 const BITS: u32 = 1 << 2;
             }
 
             /// Timer Update event
-            impl<PSCL, CPT1, CPT2> super::capture::CaptureEvent<$TIMX, PSCL> for HrTim<$TIMX, PSCL, CPT1, CPT2> {
+            impl<PSCL, CPT1, CPT2, DacRst> super::capture::CaptureEvent<$TIMX, PSCL> for HrTim<$TIMX, PSCL, CPT1, CPT2, DacRst>
+                where DacRst: DacResetTrigger
+            {
                 const BITS: u32 = 1 << 1;
             }
         )*
@@ -346,14 +370,14 @@ hrtim_timer_adc_trigger! {
 
 /// Master Timer Period event
 impl<DST, PSCL, CPT1, CPT2> super::event::TimerResetEventSource<DST, PSCL>
-    for HrTim<HRTIM_MASTER, PSCL, CPT1, CPT2>
+    for HrTim<HRTIM_MASTER, PSCL, CPT1, CPT2, NoDacTrigger>
 {
     const BITS: u32 = 1 << 4; // MSTPER
 }
 
 /// Master Timer Period event
 impl<DST, PSCL, CPT1, CPT2> super::event::EventSource<DST, PSCL>
-    for HrTim<HRTIM_MASTER, PSCL, CPT1, CPT2>
+    for HrTim<HRTIM_MASTER, PSCL, CPT1, CPT2, NoDacTrigger>
 {
     const BITS: u32 = 1 << 7; // MSTPER
 }

@@ -1,13 +1,16 @@
 #[cfg(feature = "hrtim_v2")]
 use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::{
+    pac::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
+    DacResetTrigger, DacStepTrigger, NoDacTrigger,
+};
 use core::marker::PhantomData;
 
 use super::event::EventSource;
 
 macro_rules! hrtim_out {
     ($($TIMX:ident: $out_type:ident: $tXYoen:ident, $tXYodis:ident, $tXYods:ident, $setXYr:ident, $rstXYr:ident,)+) => {$(
-        impl<PSCL> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL> {
+        impl<PSCL, R: DacResetTrigger, S: DacStepTrigger> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL, R, S> {
             fn enable(&mut self) {
                 let common = unsafe { &*HRTIM_COMMON::ptr() };
                 common.oenr().write(|w| { w.$tXYoen().set_bit() });
@@ -134,24 +137,39 @@ impl State {
 /// Caller needs to ensure that this is only implemented
 /// for types that represent pin that can act as an output
 /// for the specified timer `TIM`
-pub unsafe trait ToHrOut<TIM> {
+pub unsafe trait ToHrOut<TIM, DacRst = NoDacTrigger, DacStp = NoDacTrigger>
+where
+    DacRst: DacResetTrigger,
+    DacStp: DacStepTrigger,
+{
     type Out<PSCL>;
 }
 
-unsafe impl<TIM, PA, PB> ToHrOut<TIM> for (PA, PB)
+unsafe impl<TIM, PA, PB, DacRst, DacStp> ToHrOut<TIM, DacRst, DacStp> for (PA, PB)
 where
     PA: ToHrOut<TIM>,
     PB: ToHrOut<TIM>,
+    DacRst: DacResetTrigger,
+    DacStp: DacStepTrigger,
 {
     type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
 }
 
-pub struct HrOut1<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
-pub struct HrOut2<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
+// NOTE: Only HrOut1 can actually be used as a dac trigger
+
+pub struct HrOut1<
+    TIM,
+    PSCL,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+>(PhantomData<(TIM, PSCL, DacRst, DacStp)>);
+pub struct HrOut2<
+    TIM,
+    PSCL,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+>(PhantomData<(TIM, PSCL, DacRst, DacStp)>);
 
 unsafe impl<T> ToHrOut<T> for () {
     type Out<PSCL> = ();
 }
-
-pub struct CH1<PSCL>(PhantomData<PSCL>);
-pub struct CH2<PSCL>(PhantomData<PSCL>);
