@@ -43,7 +43,6 @@ use self::control::HrPwmControl;
 use self::deadtime::DeadtimeConfig;
 use self::output::ToHrOut;
 use self::timer_eev_cfg::EevCfgs;
-use fugit::HertzU32 as Hertz;
 
 /// Internal enum that keeps track of the count settings before PWM is finalized
 enum CountSettings {
@@ -230,9 +229,6 @@ macro_rules! hrtim_finalize_body {
         let tim = unsafe { &*$TIMX::ptr() };
         let (period, prescaler_bits) = match $this.count {
             CountSettings::Period(period) => (period as u32, PSCL::BITS as u16),
-            CountSettings::Frequency(_freq) => {
-                todo!()//<TimerHrTim<PSCL>>::calculate_frequency($this.base_freq, freq, $this.counting_direction.into())
-            },
         };
 
         let (half, _intlvd) = match $this.interleaved_mode {
@@ -451,7 +447,6 @@ macro_rules! hrtim_common_methods {
             } = self;
 
             let period = match count {
-                CountSettings::Frequency(_) => u16::MAX,
                 CountSettings::Period(period) => period,
             };
 

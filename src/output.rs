@@ -132,23 +132,14 @@ impl State {
 
 pub unsafe trait ToHrOut<TIM> {
     type Out<PSCL>;
-    type Arg;
-
-    fn connect_to_hrtim(self, arg: &mut Self::Arg);
 }
 
-unsafe impl<TIM, PA, PB, ARG> ToHrOut<TIM> for (PA, PB)
+unsafe impl<TIM, PA, PB> ToHrOut<TIM> for (PA, PB)
 where
-    PA: ToHrOut<TIM, Arg = ARG>,
-    PB: ToHrOut<TIM, Arg = ARG>,
+    PA: ToHrOut<TIM>,
+    PB: ToHrOut<TIM>,
 {
     type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
-    type Arg = ARG;
-
-    fn connect_to_hrtim(self, arg: &mut ARG) {
-        self.0.connect_to_hrtim(arg);
-        self.1.connect_to_hrtim(arg);
-    }
 }
 
 pub struct HrOut1<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
@@ -156,9 +147,6 @@ pub struct HrOut2<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
 
 unsafe impl<T> ToHrOut<T> for () {
     type Out<PSCL> = ();
-    type Arg = ();
-
-    fn connect_to_hrtim(self, _arg: &mut ()) {}
 }
 
 pub struct CH1<PSCL>(PhantomData<PSCL>);
