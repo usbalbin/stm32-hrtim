@@ -1,15 +1,5 @@
-use crate::stm32;
-
-#[cfg(feature = "stm32g4")]
-use crate::hal::comparator::{COMP1, COMP2, COMP3, COMP4, COMP5, COMP6, COMP7};
-#[cfg(feature = "stm32g4")]
-use crate::hal::gpio::gpiob::{PB3, PB4, PB5, PB6, PB7, PB8, PB9};
-#[cfg(feature = "stm32g4")]
-use crate::hal::gpio::gpioc::{PC11, PC12, PC5, PC6};
-#[cfg(feature = "stm32g4")]
-use crate::hal::gpio::{self, AF13, AF3};
+use crate::pac::HRTIM_COMMON;
 use crate::Polarity;
-use stm32::HRTIM_COMMON;
 
 use super::control::HrTimCalibrated;
 
@@ -56,55 +46,6 @@ pub struct EevInput<const N: u8>;
 pub unsafe trait EevSrcBits<const EEV_N: u8>: Sized {
     const SRC_BITS: u8;
     fn cfg(self) {}
-}
-
-#[cfg(feature = "stm32g4")]
-macro_rules! impl_eev_input {
-    ($($N:literal: COMP=[$compX:ident $(, ($compY:ident, $compY_src_bits:literal))*], PINS=[$(($pin:ident, $af:ident)),*])*) => {$(
-        $(unsafe impl<IM> EevSrcBits<$N> for $pin<gpio::Input<IM>>{
-            const SRC_BITS: u8 = 0b00;
-            fn cfg(self) {
-                self.into_alternate::<$af>();
-            }
-        })*
-
-        unsafe impl<ED> EevSrcBits<$N> for &crate::hal::comparator::Comparator<$compX, ED>
-            where ED: crate::hal::comparator::EnabledState
-        {
-            const SRC_BITS: u8 = 0b01;
-        }
-
-        $(
-            unsafe impl<ED> EevSrcBits<$N> for &crate::hal::comparator::Comparator<$compY, ED>
-                where ED: crate::hal::comparator::EnabledState
-            {
-                const SRC_BITS: u8 = $compY_src_bits;
-            }
-        )*
-
-        impl EevInput<$N> {
-            pub fn bind<const IS_FAST: bool, SRC>(self, src: SRC) -> SourceBuilder<$N, IS_FAST>
-                where SRC: EevSrcBits<$N>
-            {
-                src.cfg();
-                unsafe { SourceBuilder::new(SRC::SRC_BITS) }
-            }
-        }
-    )*};
-}
-
-#[cfg(feature = "stm32g4")]
-impl_eev_input! {
-    1: COMP = [COMP2], PINS = [(PC12, AF3)]
-    2: COMP = [COMP4], PINS = [(PC11, AF3)]
-    3: COMP = [COMP6], PINS = [(PB7, AF13)]
-    4: COMP = [COMP1, (COMP5, 0b10)], PINS = [(PB6, AF13)]
-    5: COMP = [COMP3, (COMP7, 0b10)], PINS = [(PB9, AF13)]
-    6: COMP = [COMP2, (COMP1, 0b10)], PINS = [(PB5, AF13)]
-    7: COMP = [COMP4], PINS = [(PB4, AF13)]
-    8: COMP = [COMP6, (COMP3, 0b10)], PINS = [(PB8, AF13)]
-    9: COMP = [COMP5, (COMP4, 0b11)], PINS = [(PB3, AF13)]
-    10: COMP = [COMP7], PINS = [(PC5, AF13), (PC6, AF3)]
 }
 
 #[derive()]
@@ -197,7 +138,7 @@ pub struct SourceBuilder<const N: u8, const IS_FAST: bool> {
 
 #[cfg(feature = "stm32g4")]
 impl<const N: u8, const IS_FAST: bool> SourceBuilder<N, IS_FAST> {
-    unsafe fn new(src_bits: u8) -> Self {
+    pub unsafe fn new(src_bits: u8) -> Self {
         Self {
             src_bits,
             edge_or_polarity_bits: 0, // Level sensitive

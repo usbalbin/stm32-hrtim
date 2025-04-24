@@ -1,16 +1,9 @@
-use crate::stm32;
-
 use super::timer;
 
-#[cfg(feature = "stm32g4")]
-use crate::hal::dma::PeripheralToMemory;
-#[cfg(feature = "stm32g4")]
-use crate::mcu::DmaMuxResources;
-
-use core::marker::PhantomData;
 #[cfg(feature = "hrtim_v2")]
-use stm32::HRTIM_TIMF;
-use stm32::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::pac::HRTIM_TIMF;
+use crate::pac::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use core::marker::PhantomData;
 
 pub struct Ch1;
 pub struct Ch2;
@@ -257,19 +250,6 @@ macro_rules! impl_capture {
                 // No need for exclusive access since this is a read only register
                 tim.isr().read().$cptX().bit()
             }
-        }
-
-        #[cfg(feature = "stm32g4")]
-        unsafe impl<PSCL> crate::hal::dma::traits::TargetAddress<PeripheralToMemory> for HrCapt<$TIMX, PSCL, $CH, Dma> {
-            #[inline(always)]
-            fn address(&self) -> u32 {
-                let tim = unsafe { &*$TIMX::ptr() };
-                &tim.$cptXr() as *const _ as u32
-            }
-
-            type MemSize = u32;
-
-            const REQUEST_LINE: Option<u8> = Some(DmaMuxResources::$TIMX as u8);
         }
     };
 }
