@@ -222,8 +222,92 @@ pub enum Polarity {
     ActiveLow,
 }
 
+pub trait DacStepTrigger {
+    const IS_CR2: bool;
+    const IS_OUT1_RST: bool;
+    const DCDS_BIT: Option<bool>;
+}
+
+pub trait DacResetTrigger {
+    const IS_TIM_RST: bool;
+    const IS_OUT1_SET: bool;
+    const DCDR_BIT: Option<bool>;
+}
+
+pub struct NoDacTrigger;
+
+impl DacStepTrigger for NoDacTrigger {
+    const IS_CR2: bool = false;
+    const IS_OUT1_RST: bool = false;
+
+    const DCDS_BIT: Option<bool> = None;
+}
+
+impl DacResetTrigger for NoDacTrigger {
+    const IS_TIM_RST: bool = false;
+    const IS_OUT1_SET: bool = false;
+
+    const DCDR_BIT: Option<bool> = None;
+}
+
+/// The trigger is generated on counter reset or roll-over event
+pub struct DacResetOnCounterReset;
+impl DacResetTrigger for DacResetOnCounterReset {
+    const IS_TIM_RST: bool = true;
+    const IS_OUT1_SET: bool = false;
+    const DCDR_BIT: Option<bool> = Some(false);
+}
+
+/// The trigger is generated on output 1 set event
+pub struct DacResetOnOut1Set;
+impl DacResetTrigger for DacResetOnOut1Set {
+    const IS_TIM_RST: bool = false;
+    const IS_OUT1_SET: bool = true;
+    const DCDR_BIT: Option<bool> = Some(true);
+}
+
+/// The trigger is generated on compare 2 event repeatedly
+///
+/// The compare 2 has a particular operating mode when using `OnCmp2`. The active
+/// comparison value is automatically updated as soon as a compare match
+/// has occured, so that the trigger can be repeated periodically with a period
+/// equal to the CMP2 value.
+///
+/// NOTE:
+/// The dual channel DAC trigger with `OnCmp2` must not be
+/// used simultaneously with modes using CMP2 (triple / quad interleaved
+/// and triggered-half modes).
+///
+/// Example:
+/// Let’s consider a counter period = 8192. Dividing 8192 by 6 yields 1365.33.
+/// – Round down value: 1365: 7 triggers are generated, the 6th and 7th being very
+/// close (respectively for counter = 8190 and 8192)
+/// – Round up value:1366: 6 triggers are generated. The 6th trigger on dac_step_trg
+/// (for counter = 8192) is aborted by the counter roll-over from 8192 to 0.
+pub struct DacStepOnCmp2;
+impl DacStepTrigger for DacStepOnCmp2 {
+    const IS_CR2: bool = true;
+    const IS_OUT1_RST: bool = false;
+    const DCDS_BIT: Option<bool> = Some(false);
+}
+
+/// The trigger is generated on output 1 rst event
+pub struct DacStepOnOut1Rst;
+impl DacStepTrigger for DacStepOnOut1Rst {
+    const IS_CR2: bool = false;
+    const IS_OUT1_RST: bool = true;
+    const DCDS_BIT: Option<bool> = Some(true);
+}
+
 /// HrPwmBuilder is used to configure advanced HrTim PWM features
-pub struct HrPwmBuilder<TIM, PSCL, PS, PINS> {
+pub struct HrPwmBuilder<
+    TIM,
+    PSCL,
+    PS,
+    PINS,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+> {
     _tim: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
     pub pins: PINS,
@@ -241,15 +325,24 @@ pub struct HrPwmBuilder<TIM, PSCL, PS, PINS> {
     deadtime: Option<DeadtimeConfig>,
     enable_repetition_interrupt: bool,
     eev_cfg: EevCfgs<TIM>,
+    // TODO Add DAC triggers for stm32f334 (RM0364 21.3.19) and stm32h7 if applicable
+    dac_rst_trigger: PhantomData<DacRst>,
+    dac_stp_trigger: PhantomData<DacStp>,
     out1_polarity: Polarity,
     out2_polarity: Polarity,
 }
 
-pub struct HrParts<TIM, PSCL, OUT> {
-    pub timer: HrTim<TIM, PSCL, HrCaptCh1<TIM, PSCL>, HrCaptCh2<TIM, PSCL>>,
+pub struct HrParts<
+    TIM,
+    PSCL,
+    OUT,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+> {
+    pub timer: HrTim<TIM, PSCL, HrCaptCh1<TIM, PSCL>, HrCaptCh2<TIM, PSCL>, DacRst>,
 
     pub cr1: HrCr1<TIM, PSCL>,
-    pub cr2: HrCr2<TIM, PSCL>,
+    pub cr2: HrCr2<TIM, PSCL, DacStp>,
     pub cr3: HrCr3<TIM, PSCL>,
     pub cr4: HrCr4<TIM, PSCL>,
 
@@ -316,11 +409,22 @@ macro_rules! hrtim_finalize_body {
             #[allow(unused)]
             let $out = ();
 
+            // TODO Add DAC triggers for stm32f334 (RM0364 21.3.19) and stm32h7 if applicable
             #[cfg(feature = "hrtim_v2")]
-            tim.cr2().modify(|_r, w|
+            tim.cr2().modify(|_r, w| {
                 // Set counting direction
-                w.udm().bit($this.counting_direction == HrCountingDirection::UpDown)
-            );
+                w.udm().bit($this.counting_direction == HrCountingDirection::UpDown);
+                assert!(DacRst::DCDR_BIT.is_some() == DacStp::DCDS_BIT.is_some());
+
+                if let (Some(rst), Some(stp)) = (DacRst::DCDR_BIT, DacStp::DCDS_BIT) {
+                    w
+                        .dcde().set_bit()
+                        .dcds().bit(stp as u8 != 0)
+                        .dcdr().bit(rst as u8 != 0);
+                }
+
+                w
+            });
 
             tim.cr().modify(|_r, w|
                 // Push-Pull mode
@@ -469,7 +573,10 @@ macro_rules! hrtim_finalize_body {
 macro_rules! hrtim_common_methods {
     ($TIMX:ident, $PS:ident) => {
         /// Set the prescaler; PWM count runs at base_frequency/(prescaler+1)
-        pub fn prescaler<P>(self, _prescaler: P) -> HrPwmBuilder<$TIMX, P, $PS, PINS>
+        pub fn prescaler<P>(
+            self,
+            _prescaler: P,
+        ) -> HrPwmBuilder<$TIMX, P, $PS, PINS, DacRst, DacStp>
         where
             P: HrtimPrescaler,
         {
@@ -491,6 +598,8 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
+                dac_rst_trigger,
+                dac_stp_trigger,
                 out1_polarity,
                 out2_polarity,
             } = self;
@@ -519,6 +628,8 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
+                dac_rst_trigger,
+                dac_stp_trigger,
                 out1_polarity,
                 out2_polarity,
             }
@@ -556,6 +667,110 @@ macro_rules! hrtim_common_methods {
         pub fn eev_cfg(mut self, eev_cfg: EevCfgs<$TIMX>) -> Self {
             self.eev_cfg = eev_cfg;
             self
+        }
+
+        #[cfg(feature = "hrtim_v2")]
+        /// Enable dac trigger with provided settings
+        ///
+        /// ### Edge-aligned slope compensation
+        ///
+        /// The DAC’s sawtooth starts on PWM period beginning and
+        /// multiple triggers are generated during the timer period
+        /// with a trigger interval equal to the CMP2 value.
+        ///
+        /// NOTE:
+        /// Must not be used simultaneously with modes using
+        /// CMP2 (triple / quad interleaved and triggered-half modes).
+        /// reset_trigger: DacRstTrg::OnCounterReset,
+        /// step_trigger: DacStpTrg::OnCmp2,
+        ///
+        /// ### Center-aligned slope compensation
+        ///
+        /// The DAC’s sawtooth starts on the output 1 set event and
+        /// multiple triggers are generated during the timer period
+        /// with a trigger interval equal to the CMP2 value.
+        ///
+        /// NOTE:
+        /// Must not be used simultaneously with modes using
+        /// CMP2 (triple / quad interleaved and triggered-half modes).
+        ///
+        /// NOTE:
+        /// In centered-pattern mode, it is mandatory to have an even
+        /// number of triggers per switching period, so as to avoid
+        /// unevenly spaced triggers around counter’s peak value.
+        ///
+        /// reset_trigger: DacRstTrg::OnOut1Set,
+        /// step_trigger: DacStpTrg::OnCmp2,
+        ///
+        /// ### Hysteretic controller - Reset on CounterReset
+        ///
+        /// 2 triggers are generated per PWM period.
+        /// In edge-aligned mode the triggers are generated on counter
+        /// reset or rollover and the output is reset
+        ///
+        /// reset_trigger: [`DacResetOnCounterReset,
+        /// step_trigger: [`DacStepOnOut1Rst,
+        ///
+        /// ### Hysteretic controller - Reset on Out1Set
+        ///
+        /// 2 triggers are generated per PWM period.
+        /// In center-aligned mode the triggers are generated when the output is
+        /// set and when it is reset.
+        ///
+        /// reset_trigger: [`DacResetOnOut1Set`],
+        /// step_trigger: [`DacStepOnOut1Rst`],
+        pub fn dac_trigger_cfg<R: DacResetTrigger, S: DacStepTrigger>(
+            self,
+            _rst: R,
+            _step: S,
+        ) -> HrPwmBuilder<$TIMX, PSCL, $PS, PINS, R, S> {
+            let HrPwmBuilder {
+                _tim,
+                _prescaler: _,
+                pins,
+                timer_mode,
+                fault_enable_bits,
+                fault1_bits,
+                fault2_bits,
+                enable_push_pull,
+                interleaved_mode,
+                counting_direction,
+                //base_freq,
+                count,
+                preload_source,
+                repetition_counter,
+                deadtime,
+                enable_repetition_interrupt,
+                eev_cfg,
+                dac_rst_trigger: _,
+                dac_stp_trigger: _,
+                out1_polarity,
+                out2_polarity,
+            } = self;
+
+            HrPwmBuilder {
+                _tim,
+                _prescaler: PhantomData,
+                pins,
+                timer_mode,
+                fault_enable_bits,
+                fault1_bits,
+                fault2_bits,
+                enable_push_pull,
+                interleaved_mode,
+                counting_direction,
+                //base_freq,
+                count,
+                preload_source,
+                repetition_counter,
+                deadtime,
+                enable_repetition_interrupt,
+                eev_cfg,
+                dac_rst_trigger: PhantomData,
+                dac_stp_trigger: PhantomData,
+                out1_polarity,
+                out2_polarity,
+            }
         }
     };
 }
@@ -597,15 +812,19 @@ macro_rules! hrtim_hal {
                         deadtime: None,
                         enable_repetition_interrupt: false,
                         eev_cfg: EevCfgs::default(),
+                        dac_rst_trigger: PhantomData,
+                        dac_stp_trigger: PhantomData,
                         out1_polarity: Polarity::ActiveHigh,
                         out2_polarity: Polarity::ActiveHigh,
                     }
                 }
             }
 
-            impl<PSCL, PINS>
-                HrPwmBuilder<$TIMX, PSCL, PreloadSource, PINS>
+            impl<PSCL, PINS, DacRst, DacStp>
+                HrPwmBuilder<$TIMX, PSCL, PreloadSource, PINS, DacRst, DacStp>
             where
+                DacRst: DacResetTrigger,
+                DacStp: DacStepTrigger,
                 PSCL: HrtimPrescaler,
                 PINS: ToHrOut<$TIMX>,
             {
@@ -738,18 +957,23 @@ impl HrPwmAdvExt for HRTIM_MASTER {
             deadtime: None,
             enable_repetition_interrupt: false,
             eev_cfg: EevCfgs::default(),
+            dac_rst_trigger: PhantomData,
+            dac_stp_trigger: PhantomData,
             out1_polarity: Polarity::ActiveHigh,
             out2_polarity: Polarity::ActiveHigh,
         }
     }
 }
 
-impl<PSCL, PINS> HrPwmBuilder<HRTIM_MASTER, PSCL, MasterPreloadSource, PINS>
+impl<PSCL, PINS, DacRst, DacStp>
+    HrPwmBuilder<HRTIM_MASTER, PSCL, MasterPreloadSource, PINS, DacRst, DacStp>
 where
+    DacRst: DacResetTrigger,
+    DacStp: DacStepTrigger,
     PSCL: HrtimPrescaler,
     PINS: ToHrOut<HRTIM_MASTER>,
 {
-    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, ()> {
+    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, PINS> {
         hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, []);
 
         unsafe { MaybeUninit::uninit().assume_init() }
