@@ -15,6 +15,7 @@ impl HrTimOngoingCalibration {
     //
     // Look in the hal for an corresponding extension trait for `HRTIM_COMMON`
     pub unsafe fn hr_control() -> HrTimOngoingCalibration {
+        #[allow(unused_variables)]
         let common = unsafe { &*HRTIM_COMMON::ptr() };
 
         // Start calibration procedure

@@ -1,3 +1,4 @@
+#[cfg(feature = "hrtim_v2")]
 use crate::pac;
 use core::marker::PhantomData;
 
@@ -7,6 +8,7 @@ pub struct TimerReset<T>(pub(crate) PhantomData<T>);
 /// Handle to timers period event
 pub struct TimerPeriod<T>(pub(crate) PhantomData<T>);
 
+#[cfg(feature = "hrtim_v2")]
 macro_rules! impl_adc1234_trigger {
     ($($t:ident: [$trait_:ident, $adcXr:ident]),*) => {$(
         #[non_exhaustive]
@@ -40,22 +42,27 @@ macro_rules! impl_adc5678910_trigger {
     )*}
 }
 
+#[cfg(feature = "hrtim_v2")]
 pub trait AdcTrigger13 {
     const BITS: u32;
 }
 
+#[cfg(feature = "hrtim_v2")]
 pub trait AdcTrigger24 {
     const BITS: u32;
 }
 
+#[cfg(feature = "hrtim_v2")]
 pub trait AdcTrigger579 {
     const BITS: u32;
 }
 
+#[cfg(feature = "hrtim_v2")]
 pub trait AdcTrigger6810 {
     const BITS: u32;
 }
 
+#[cfg(feature = "hrtim_v2")]
 impl_adc1234_trigger! {
     AdcTrigger1: [AdcTrigger13, adc1r],
     AdcTrigger2: [AdcTrigger24, adc2r],

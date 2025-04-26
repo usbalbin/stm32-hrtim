@@ -46,28 +46,28 @@ pub mod timer_eev_cfg;
 pub use stm32f3::stm32f3x4 as pac;
 
 #[cfg(feature = "stm32h742")]
-pub use stm32h7::stm32h742::*;
+pub use stm32h7::stm32h742 as pac;
 
 #[cfg(feature = "stm32h743")]
-pub use stm32h7::stm32h743::*;
+pub use stm32h7::stm32h743 as pac;
 
 //#[cfg(feature = "stm32h745")]
-//pub use stm32h7::stm32h745::*;
+//pub use stm32h7::stm32h745 as pac;
 
 #[cfg(feature = "stm32h747cm7")]
-pub use stm32h7::stm32h747cm7::*;
+pub use stm32h7::stm32h747cm7 as pac;
 
 #[cfg(feature = "stm32h750")]
-pub use stm32h7::stm32h750::*;
+pub use stm32h7::stm32h750 as pac;
 
 #[cfg(feature = "stm32h753")]
-pub use stm32h7::stm32h753::*;
+pub use stm32h7::stm32h753 as pac;
 
 //#[cfg(feature = "stm32h755")]
-//pub use stm32h7::stm32h755::*;
+//pub use stm32h7::stm32h755 as pac;
 
 //#[cfg(feature = "stm32h757")]
-//pub use stm32h7::stm32h757::*;
+//pub use stm32h7::stm32h757 as pac;
 
 #[cfg(feature = "stm32g474")]
 pub use stm32g4::stm32g474 as pac;
