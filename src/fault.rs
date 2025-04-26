@@ -1,4 +1,4 @@
-use crate::pac::HRTIM_COMMON;
+use crate::{control::HrPwmControl, pac::HRTIM_COMMON};
 
 use super::control::HrPwmCtrl;
 
@@ -60,18 +60,73 @@ impl<I> SourceBuilder<I> {
     }
 }
 
-#[non_exhaustive]
-pub struct FaultInput1;
-#[non_exhaustive]
-pub struct FaultInput2;
-#[non_exhaustive]
-pub struct FaultInput3;
-#[non_exhaustive]
-pub struct FaultInput4;
-#[non_exhaustive]
-pub struct FaultInput5;
-#[non_exhaustive]
-pub struct FaultInput6;
+macro_rules! impl_faults {
+    ($(
+        $input:ident => $source:ident:
+            PINS=[($pin:ident, $af:ident) $(,($pin_b:ident, $af_b:ident))*],
+            COMP=$compX:ident, $enable_bits:literal,
+            $fltinrZ:ident, $fltWsrc_0:ident, $fltWsrc_1:ident, $fltWp:ident, $fltWf:ident, $fltWe:ident, $fltWlck:ident,
+    )+) => {$(
+        // This should NOT be Copy/Clone
+        #[non_exhaustive]
+        pub struct $input;
+
+        #[non_exhaustive]
+        #[derive(Copy, Clone)]
+        pub struct $source;
+
+        impl SourceBuilder<$input> {
+            pub fn finalize(self, _control: &mut HrPwmControl) -> $source {
+                let SourceBuilder{ _input, src_bits, is_active_high, filter_bits } = self;
+
+                // Setup fault source
+                unsafe {
+                    let common = &*HRTIM_COMMON::ptr();
+
+                    common.fltinr2().modify(|_r, w| w.$fltWsrc_1().bit(src_bits & 0b10 != 0));
+                    common.$fltinrZ().modify(|_r, w| w
+                        .$fltWsrc_0().bit(src_bits & 0b01 != 0)
+                        .$fltWp().bit(is_active_high)
+                        .$fltWf().bits(filter_bits)
+                        .$fltWe().set_bit() // Enable
+                    );
+
+                    // ... and lock configuration
+                    common.$fltinrZ().modify(|_r, w| w.$fltWlck().set_bit());
+                }
+
+                $source
+            }
+
+            pub fn polarity(mut self, polarity: super::Polarity) -> Self {
+                self.is_active_high = matches!(polarity, super::Polarity::ActiveHigh);
+                self
+            }
+
+            // TODO: add more settings
+            /* pub fn blanking(?) -> Self */
+
+            pub fn filter(mut self, filter: FaultSamplingFilter) -> Self {
+                self.filter_bits = filter as u8;
+                self
+            }
+        }
+
+        unsafe impl FaultSource for $source {
+            const ENABLE_BITS: u8 = $enable_bits;
+        }
+    )+}
+}
+
+#[cfg(feature = "stm32g4")]
+impl_faults!(
+    FaultInput1 => FaultSource1: PINS=[(PA12, AF13)], COMP=COMP2, 0b000001, fltinr1, flt1src, flt1src_1, flt1p, flt1f, flt1e, flt1lck,
+    FaultInput2 => FaultSource2: PINS=[(PA15, AF13)], COMP=COMP4, 0b000010, fltinr1, flt2src, flt2src_1, flt2p, flt2f, flt2e, flt2lck,
+    FaultInput3 => FaultSource3: PINS=[(PB10, AF13)], COMP=COMP6, 0b000100, fltinr1, flt3src, flt3src_1, flt3p, flt3f, flt3e, flt3lck,
+    FaultInput4 => FaultSource4: PINS=[(PB11, AF13)], COMP=COMP1, 0b001000, fltinr1, flt4src, flt4src_1, flt4p, flt4f, flt4e, flt4lck,
+    FaultInput5 => FaultSource5: PINS=[(PB0, AF13), (PC7, AF3)], COMP=COMP3, 0b010000, fltinr2, flt5src, flt5src_1, flt5p, flt5f, flt5e, flt5lck,
+    FaultInput6 => FaultSource6: PINS=[(PC10, AF13)], COMP=COMP5, 0b100000, fltinr2, flt6src, flt6src_1, flt6p, flt6f, flt6e, flt6lck,
+);
 
 pub struct FaultInputs {
     #[cfg(feature = "stm32g4")]

@@ -1,3 +1,4 @@
+use crate::adc_trigger;
 #[cfg(feature = "hrtim_v2")]
 use crate::fault::FltMonitor6;
 use crate::fault::{
@@ -227,25 +228,25 @@ impl HrTimCalibrated {
             fault_6: FltMonitor6,
 
             #[cfg(feature = "stm32g4")]
-            adc_trigger1: Adc1Trigger,
+            adc_trigger1: adc_trigger::AdcTrigger1,
             #[cfg(feature = "stm32g4")]
-            adc_trigger2: Adc2Trigger,
+            adc_trigger2: adc_trigger::AdcTrigger2,
             #[cfg(feature = "stm32g4")]
-            adc_trigger3: Adc3Trigger,
+            adc_trigger3: adc_trigger::AdcTrigger3,
             #[cfg(feature = "stm32g4")]
-            adc_trigger4: Adc4Trigger,
+            adc_trigger4: adc_trigger::AdcTrigger4,
             #[cfg(feature = "stm32g4")]
-            adc_trigger5: Adc5Trigger,
+            adc_trigger5: adc_trigger::AdcTrigger5,
             #[cfg(feature = "stm32g4")]
-            adc_trigger6: Adc6Trigger,
+            adc_trigger6: adc_trigger::AdcTrigger6,
             #[cfg(feature = "stm32g4")]
-            adc_trigger7: Adc7Trigger,
+            adc_trigger7: adc_trigger::AdcTrigger7,
             #[cfg(feature = "stm32g4")]
-            adc_trigger8: Adc8Trigger,
+            adc_trigger8: adc_trigger::AdcTrigger8,
             #[cfg(feature = "stm32g4")]
-            adc_trigger9: Adc9Trigger,
+            adc_trigger9: adc_trigger::AdcTrigger9,
             #[cfg(feature = "stm32g4")]
-            adc_trigger10: Adc10Trigger,
+            adc_trigger10: adc_trigger::AdcTrigger10,
         }
     }
 }
@@ -277,47 +278,27 @@ pub struct HrPwmControl {
     pub fault_6: FltMonitor6,
 
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger1: Adc1Trigger,
+    pub adc_trigger1: adc_trigger::AdcTrigger1,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger2: Adc2Trigger,
+    pub adc_trigger2: adc_trigger::AdcTrigger2,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger3: Adc3Trigger,
+    pub adc_trigger3: adc_trigger::AdcTrigger3,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger4: Adc4Trigger,
+    pub adc_trigger4: adc_trigger::AdcTrigger4,
 
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger5: Adc5Trigger,
+    pub adc_trigger5: adc_trigger::AdcTrigger5,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger6: Adc6Trigger,
+    pub adc_trigger6: adc_trigger::AdcTrigger6,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger7: Adc7Trigger,
+    pub adc_trigger7: adc_trigger::AdcTrigger7,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger8: Adc8Trigger,
+    pub adc_trigger8: adc_trigger::AdcTrigger8,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger9: Adc9Trigger,
+    pub adc_trigger9: adc_trigger::AdcTrigger9,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger10: Adc10Trigger,
+    pub adc_trigger10: adc_trigger::AdcTrigger10,
 }
-#[non_exhaustive]
-pub struct Adc1Trigger;
-#[non_exhaustive]
-pub struct Adc2Trigger;
-#[non_exhaustive]
-pub struct Adc3Trigger;
-#[non_exhaustive]
-pub struct Adc4Trigger;
-#[non_exhaustive]
-pub struct Adc5Trigger;
-#[non_exhaustive]
-pub struct Adc6Trigger;
-#[non_exhaustive]
-pub struct Adc7Trigger;
-#[non_exhaustive]
-pub struct Adc8Trigger;
-#[non_exhaustive]
-pub struct Adc9Trigger;
-#[non_exhaustive]
-pub struct Adc10Trigger;
 
 #[cfg(feature = "stm32g4")]
 pub enum AdcTriggerPostscaler {

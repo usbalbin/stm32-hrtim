@@ -15,13 +15,10 @@ pub struct HrCr3<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
 pub struct HrCr4<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
 
 #[cfg(feature = "stm32g4")]
-use super::adc_trigger::Adc13Trigger as Adc13;
-#[cfg(feature = "stm32g4")]
-use super::adc_trigger::Adc24Trigger as Adc24;
-#[cfg(feature = "stm32g4")]
-use super::adc_trigger::Adc579Trigger as Adc579;
-#[cfg(feature = "stm32g4")]
-use super::adc_trigger::Adc6810Trigger as Adc6810;
+use super::adc_trigger::{
+    AdcTrigger13 as Adc13, AdcTrigger24 as Adc24, AdcTrigger579 as Adc579,
+    AdcTrigger6810 as Adc6810,
+};
 
 macro_rules! hrtim_cr_helper {
     (HRTIM_MASTER: $cr_type:ident:

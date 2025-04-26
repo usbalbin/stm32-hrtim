@@ -1,5 +1,35 @@
 #![no_std]
 
+#[cfg(not(any(
+    feature = "stm32f334",
+    feature = "stm32h742",
+    feature = "stm32h743",
+    //feature = "stm32h745",
+    feature = "stm32h747cm7",
+    feature = "stm32h750",
+    feature = "stm32h753",
+    //feature = "stm32h755",
+    //feature = "stm32h757",
+    feature = "stm32g474",
+    feature = "stm32g484",
+)))]
+compile_error!(
+    "This crate requires one of the following features enabled:
+    stm32f334
+
+    stm32h742
+    stm32h743
+    #stm32h745
+    stm32h747cm7
+    stm32h750
+    stm32h753
+    #stm32h755
+    #stm32h757
+
+    stm32g474
+    stm32g484"
+);
+
 pub mod adc_trigger;
 pub mod capture;
 pub mod compare_register;
@@ -177,7 +207,7 @@ pub enum Polarity {
 pub struct HrPwmBuilder<TIM, PSCL, PS, PINS> {
     _tim: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
-    pins: PINS,
+    pub pins: PINS,
     timer_mode: HrTimerMode,
     counting_direction: HrCountingDirection,
     //base_freq: HertzU64,
@@ -563,8 +593,9 @@ macro_rules! hrtim_hal {
                 // For HAL writers:
                 // Make sure to connect gpios after calling this function and then it should be safe to
                 // conjure an instance of HrParts<$TIMX, PSCL, PINS::Out<PSCL>>
-                pub fn _init(self, _control: &mut HrPwmControl) {
-                    hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*])
+                pub fn _init(self, _control: &mut HrPwmControl) -> PINS {
+                    hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*]);
+                    self.pins
                 }
 
                 hrtim_common_methods!($TIMX, PreloadSource);
