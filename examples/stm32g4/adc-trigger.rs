@@ -5,7 +5,7 @@
 use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
-    compare_register::HrCompareRegister, control::HrControltExt, output::HrOutput, timer::HrTimer,
+    compare_register::HrCompareRegister, output::HrOutput, timer::HrTimer,
     HrParts, HrPwmAdvExt, Pscl4,
 };
 use stm32g4xx_hal::{

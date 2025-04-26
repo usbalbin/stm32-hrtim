@@ -23,6 +23,7 @@ macro_rules! impl_adc1234_trigger {
     )*}
 }
 
+#[cfg(feature = "hrtim_v2")]
 macro_rules! impl_adc5678910_trigger {
     ($($t:ident: [$trait_:ident, $adcXtrg:ident]),*) => {$(
         #[non_exhaustive]
@@ -62,6 +63,7 @@ impl_adc1234_trigger! {
     AdcTrigger4: [AdcTrigger24, adc4r]
 }
 
+#[cfg(feature = "hrtim_v2")]
 impl_adc5678910_trigger! {
     AdcTrigger5: [AdcTrigger579,   adc5trg],
     AdcTrigger6: [AdcTrigger6810,  adc6trg],

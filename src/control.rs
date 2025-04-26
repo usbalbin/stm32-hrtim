@@ -1,3 +1,4 @@
+#[cfg(feature = "hrtim_v2")]
 use crate::adc_trigger;
 #[cfg(feature = "hrtim_v2")]
 use crate::fault::FltMonitor6;

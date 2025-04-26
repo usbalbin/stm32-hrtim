@@ -1,4 +1,6 @@
-use crate::{control::HrPwmControl, pac::HRTIM_COMMON};
+#[cfg(feature = "hrtim_v2")]
+use crate::control::HrPwmControl;
+use crate::pac::HRTIM_COMMON;
 
 use super::control::HrPwmCtrl;
 
@@ -60,11 +62,11 @@ impl<I> SourceBuilder<I> {
     }
 }
 
+#[cfg(feature = "hrtim_v2")]
 macro_rules! impl_faults {
     ($(
         $input:ident => $source:ident:
-            PINS=[($pin:ident, $af:ident) $(,($pin_b:ident, $af_b:ident))*],
-            COMP=$compX:ident, $enable_bits:literal,
+            $enable_bits:literal,
             $fltinrZ:ident, $fltWsrc_0:ident, $fltWsrc_1:ident, $fltWp:ident, $fltWf:ident, $fltWe:ident, $fltWlck:ident,
     )+) => {$(
         // This should NOT be Copy/Clone
@@ -118,45 +120,45 @@ macro_rules! impl_faults {
     )+}
 }
 
-#[cfg(feature = "stm32g4")]
+#[cfg(feature = "hrtim_v2")]
 impl_faults!(
-    FaultInput1 => FaultSource1: PINS=[(PA12, AF13)], COMP=COMP2, 0b000001, fltinr1, flt1src, flt1src_1, flt1p, flt1f, flt1e, flt1lck,
-    FaultInput2 => FaultSource2: PINS=[(PA15, AF13)], COMP=COMP4, 0b000010, fltinr1, flt2src, flt2src_1, flt2p, flt2f, flt2e, flt2lck,
-    FaultInput3 => FaultSource3: PINS=[(PB10, AF13)], COMP=COMP6, 0b000100, fltinr1, flt3src, flt3src_1, flt3p, flt3f, flt3e, flt3lck,
-    FaultInput4 => FaultSource4: PINS=[(PB11, AF13)], COMP=COMP1, 0b001000, fltinr1, flt4src, flt4src_1, flt4p, flt4f, flt4e, flt4lck,
-    FaultInput5 => FaultSource5: PINS=[(PB0, AF13), (PC7, AF3)], COMP=COMP3, 0b010000, fltinr2, flt5src, flt5src_1, flt5p, flt5f, flt5e, flt5lck,
-    FaultInput6 => FaultSource6: PINS=[(PC10, AF13)], COMP=COMP5, 0b100000, fltinr2, flt6src, flt6src_1, flt6p, flt6f, flt6e, flt6lck,
+    FaultInput1 => FaultSource1: 0b000001, fltinr1, flt1src, flt1src_1, flt1p, flt1f, flt1e, flt1lck,
+    FaultInput2 => FaultSource2: 0b000010, fltinr1, flt2src, flt2src_1, flt2p, flt2f, flt2e, flt2lck,
+    FaultInput3 => FaultSource3: 0b000100, fltinr1, flt3src, flt3src_1, flt3p, flt3f, flt3e, flt3lck,
+    FaultInput4 => FaultSource4: 0b001000, fltinr1, flt4src, flt4src_1, flt4p, flt4f, flt4e, flt4lck,
+    FaultInput5 => FaultSource5: 0b010000, fltinr2, flt5src, flt5src_1, flt5p, flt5f, flt5e, flt5lck,
+    FaultInput6 => FaultSource6: 0b100000, fltinr2, flt6src, flt6src_1, flt6p, flt6f, flt6e, flt6lck,
 );
 
 pub struct FaultInputs {
-    #[cfg(feature = "stm32g4")]
+    #[cfg(feature = "hrtim_v2")]
     pub fault_input1: FaultInput1,
-    #[cfg(feature = "stm32g4")]
+    #[cfg(feature = "hrtim_v2")]
     pub fault_input2: FaultInput2,
-    #[cfg(feature = "stm32g4")]
+    #[cfg(feature = "hrtim_v2")]
     pub fault_input3: FaultInput3,
-    #[cfg(feature = "stm32g4")]
+    #[cfg(feature = "hrtim_v2")]
     pub fault_input4: FaultInput4,
-    #[cfg(feature = "stm32g4")]
+    #[cfg(feature = "hrtim_v2")]
     pub fault_input5: FaultInput5,
-    #[cfg(feature = "stm32g4")]
+    #[cfg(feature = "hrtim_v2")]
     pub fault_input6: FaultInput6,
 }
 
 impl FaultInputs {
     pub(crate) unsafe fn new() -> Self {
         FaultInputs {
-            #[cfg(feature = "stm32g4")]
+            #[cfg(feature = "hrtim_v2")]
             fault_input1: FaultInput1,
-            #[cfg(feature = "stm32g4")]
+            #[cfg(feature = "hrtim_v2")]
             fault_input2: FaultInput2,
-            #[cfg(feature = "stm32g4")]
+            #[cfg(feature = "hrtim_v2")]
             fault_input3: FaultInput3,
-            #[cfg(feature = "stm32g4")]
+            #[cfg(feature = "hrtim_v2")]
             fault_input4: FaultInput4,
-            #[cfg(feature = "stm32g4")]
+            #[cfg(feature = "hrtim_v2")]
             fault_input5: FaultInput5,
-            #[cfg(feature = "stm32g4")]
+            #[cfg(feature = "hrtim_v2")]
             fault_input6: FaultInput6,
         }
     }

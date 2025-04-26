@@ -7,7 +7,6 @@ use panic_probe as _;
 use stm32_hrtim::{
     capture,
     compare_register::HrCompareRegister,
-    control::HrControltExt,
     external_event::{self, ToExternalEventSource},
     output::HrOutput,
     timer::{HrSlaveTimerCpt, HrTimer, TimerSplitCapture},
