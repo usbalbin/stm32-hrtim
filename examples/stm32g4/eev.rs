@@ -7,16 +7,15 @@ use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
     compare_register::HrCompareRegister,
-    control::HrControltExt,
     external_event::{self, ToExternalEventSource},
     output::HrOutput,
     timer::HrTimer,
     timer_eev_cfg::EevCfgs,
-    HrParts, HrPwmAdvExt, Pscl4,
+    HrParts, HrPwmAdvExt, Polarity, Pscl4,
 };
 use stm32g4xx_hal::{
     gpio::GpioExt,
-    pwm,
+    hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stm32::Peripherals,
@@ -50,7 +49,7 @@ fn main() -> ! {
         .eev_input3
         .bind(gpiob.pb7.into_pull_down_input())
         .edge_or_polarity(external_event::EdgeOrPolarity::Polarity(
-            pwm::Polarity::ActiveHigh,
+            Polarity::ActiveHigh,
         ))
         .finalize(&mut hr_control);
 

@@ -7,23 +7,10 @@ use cortex_m_rt::entry;
 use fugit::ExtU32 as _;
 use panic_probe as _;
 use stm32_hrtim::{
-    compare_register::HrCompareRegister,
-    control::HrControltExt,
-    fault::{FaultAction, FaultMonitor},
-    output::HrOutput,
-    timer::HrTimer,
-    HrParts, HrPwmAdvExt, Pscl4,
+    compare_register::HrCompareRegister, fault::{FaultAction, FaultMonitor}, output::HrOutput, timer::HrTimer, HrParts, HrPwmAdvExt, Polarity, Pscl4
 };
 use stm32g4xx_hal::{
-    self as hal,
-    adc::AdcClaim,
-    comparator::{self, ComparatorExt, ComparatorSplit},
-    dac::{Dac3IntSig1, DacExt, DacOut},
-    delay::{DelayExt as _, SYSTDelayExt},
-    gpio::GpioExt,
-    pwr::PwrExt,
-    rcc::{self, RccExt},
-    stm32::{CorePeripherals, Peripherals},
+    self as hal, adc::AdcClaim, comparator::{self, ComparatorExt, ComparatorSplit}, dac::{Dac3IntSig1, DacExt, DacOut}, delay::{DelayExt as _, SYSTDelayExt}, gpio::GpioExt, hrtim::{fault::FaultInput, HrControltExt, HrPwmBuilderExt}, pwr::PwrExt, rcc::{self, RccExt}, stm32::{CorePeripherals, Peripherals}
 };
 
 #[entry]
@@ -85,8 +72,8 @@ fn main() -> ! {
 
     let fault_source5 = flt_inputs
         .fault_input5
-        .bind_comp(&comp3)
-        .polarity(hal::pwm::Polarity::ActiveHigh)
+        .bind(comp3)
+        .polarity(Polarity::ActiveHigh)
         .finalize(&mut hr_control);
 
     // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 960MHz
@@ -137,9 +124,9 @@ fn main() -> ! {
         for _ in 0..5 {
             delay.delay(500_u32.millis());
             defmt::info!(
-                "State: {:?}, comp: {}, is_fault_active: {}, pc1: {}",
+                "State: {:?}, comp: {}, is_fault_active: _, pc1: {}",
                 out1.get_state(),
-                comp3.output(),
+                //comp3.output(), // TODO
                 hr_control.fault_5.is_fault_active(),
                 adc1.convert(&pc1, hal::adc::config::SampleTime::Cycles_92_5)
             );
