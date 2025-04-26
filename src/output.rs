@@ -130,6 +130,10 @@ impl State {
     }
 }
 
+/// # Safety
+/// Caller needs to ensure that this is only implemented
+/// for types that represent pin that can act as an output
+/// for the specified timer `TIM`
 pub unsafe trait ToHrOut<TIM> {
     type Out<PSCL>;
 }

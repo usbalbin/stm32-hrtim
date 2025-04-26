@@ -138,6 +138,9 @@ pub struct SourceBuilder<const N: u8, const IS_FAST: bool> {
 
 #[cfg(feature = "stm32g4")]
 impl<const N: u8, const IS_FAST: bool> SourceBuilder<N, IS_FAST> {
+    /// # Safety
+    /// Caller needs to ensure that src_bits is a valid bit pattern
+    /// for eeXsrc bits in eecr1/2 registers for the intended input
     pub unsafe fn new(src_bits: u8) -> Self {
         Self {
             src_bits,

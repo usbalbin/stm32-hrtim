@@ -11,9 +11,12 @@ use crate::pac::HRTIM_COMMON;
 use super::{external_event::EevInputs, fault::FaultInputs};
 
 impl HrTimOngoingCalibration {
-    // The user is expected to have setup and enabled rcc clock to the peripheral
-    //
-    // Look in the hal for an corresponding extension trait for `HRTIM_COMMON`
+    /// Look in the hal for an corresponding extension trait for `HRTIM_COMMON`.
+    /// 
+    /// ..unless you are the one implementing the hal
+    ///
+    /// # Safety
+    /// The user is expected to have setup and enabled rcc clock to the peripheral
     pub unsafe fn hr_control() -> HrTimOngoingCalibration {
         #[allow(unused_variables)]
         let common = unsafe { &*HRTIM_COMMON::ptr() };

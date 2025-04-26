@@ -52,6 +52,9 @@ pub struct SourceBuilder<I> {
 
 #[cfg(feature = "stm32g4")]
 impl<I> SourceBuilder<I> {
+    /// # Safety
+    /// Caller needs to ensure that src_bits is a valid bit pattern
+    /// for fltXsrc bits in fltinr1/2 registers for the intended input
     pub unsafe fn new(input: I, src_bits: u8) -> Self {
         SourceBuilder {
             _input: input,
