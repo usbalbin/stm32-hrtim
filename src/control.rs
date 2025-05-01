@@ -1,80 +1,25 @@
 #[cfg(feature = "hrtim_v2")]
+use crate::adc_trigger;
+#[cfg(feature = "hrtim_v2")]
 use crate::fault::FltMonitor6;
 use crate::fault::{
     FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitorSys,
 };
 
-use crate::{hal, stm32};
-
-#[cfg(feature = "stm32h7")]
-use hal::rcc::ResetEnable as _;
-
-#[cfg(not(feature = "stm32h7"))]
-use hal::rcc::{Enable, Reset};
-
-use stm32::HRTIM_COMMON;
+use crate::pac::HRTIM_COMMON;
 
 use super::{external_event::EevInputs, fault::FaultInputs};
 
-pub trait HrControltExt {
-    fn hr_control(
-        self,
-        #[cfg(feature = "stm32f3")] _clocks: &hal::rcc::Clocks,
-        #[cfg(feature = "stm32f3")] apb2: &mut hal::rcc::APB2,
-
+impl HrTimOngoingCalibration {
+    /// Look in the hal for an corresponding extension trait for `HRTIM_COMMON`.
+    /// 
+    /// ..unless you are the one implementing the hal
+    ///
+    /// # Safety
+    /// The user is expected to have setup and enabled rcc clock to the peripheral
+    pub unsafe fn hr_control() -> HrTimOngoingCalibration {
         #[allow(unused_variables)]
-        #[cfg(feature = "stm32g4")]
-        rcc: &mut hal::rcc::Rcc,
-
-        #[cfg(feature = "stm32h7")] _clocks: &hal::rcc::CoreClocks,
-        #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
-    ) -> HrTimOngoingCalibration;
-}
-
-impl HrControltExt for HRTIM_COMMON {
-    fn hr_control(
-        self,
-        #[cfg(feature = "stm32f3")] _clocks: &hal::rcc::Clocks,
-        #[cfg(feature = "stm32f3")] apb2: &mut hal::rcc::APB2,
-
-        #[allow(unused_variables)]
-        #[cfg(feature = "stm32g4")]
-        rcc: &mut hal::rcc::Rcc,
-
-        #[cfg(feature = "stm32h7")] _clocks: &hal::rcc::CoreClocks,
-        #[cfg(feature = "stm32h7")] rcc: hal::rcc::rec::Hrtim,
-    ) -> HrTimOngoingCalibration {
         let common = unsafe { &*HRTIM_COMMON::ptr() };
-
-        let rcc = {
-            #[cfg(feature = "stm32g4")]
-            unsafe {
-                &*stm32::RCC::ptr()
-            }
-
-            #[cfg(feature = "stm32f3")]
-            {
-                apb2
-            }
-
-            #[cfg(feature = "stm32h7")]
-            {
-                {
-                    let rcc = unsafe { &*hal::stm32::RCC::ptr() };
-                    // Same clock source as CPU
-                    rcc.cfgr().modify(|_, w| w.hrtimsel().c_ck());
-                }
-                rcc
-            }
-        };
-
-        #[cfg(not(feature = "stm32h7"))]
-        <HRTIM_COMMON as Enable>::enable(rcc);
-        #[cfg(not(feature = "stm32h7"))]
-        <HRTIM_COMMON as Reset>::reset(rcc);
-
-        #[cfg(feature = "stm32h7")]
-        rcc.enable().reset();
 
         // Start calibration procedure
         #[cfg(not(feature = "stm32h7"))]
@@ -288,25 +233,25 @@ impl HrTimCalibrated {
             fault_6: FltMonitor6,
 
             #[cfg(feature = "stm32g4")]
-            adc_trigger1: Adc1Trigger,
+            adc_trigger1: adc_trigger::AdcTrigger1,
             #[cfg(feature = "stm32g4")]
-            adc_trigger2: Adc2Trigger,
+            adc_trigger2: adc_trigger::AdcTrigger2,
             #[cfg(feature = "stm32g4")]
-            adc_trigger3: Adc3Trigger,
+            adc_trigger3: adc_trigger::AdcTrigger3,
             #[cfg(feature = "stm32g4")]
-            adc_trigger4: Adc4Trigger,
+            adc_trigger4: adc_trigger::AdcTrigger4,
             #[cfg(feature = "stm32g4")]
-            adc_trigger5: Adc5Trigger,
+            adc_trigger5: adc_trigger::AdcTrigger5,
             #[cfg(feature = "stm32g4")]
-            adc_trigger6: Adc6Trigger,
+            adc_trigger6: adc_trigger::AdcTrigger6,
             #[cfg(feature = "stm32g4")]
-            adc_trigger7: Adc7Trigger,
+            adc_trigger7: adc_trigger::AdcTrigger7,
             #[cfg(feature = "stm32g4")]
-            adc_trigger8: Adc8Trigger,
+            adc_trigger8: adc_trigger::AdcTrigger8,
             #[cfg(feature = "stm32g4")]
-            adc_trigger9: Adc9Trigger,
+            adc_trigger9: adc_trigger::AdcTrigger9,
             #[cfg(feature = "stm32g4")]
-            adc_trigger10: Adc10Trigger,
+            adc_trigger10: adc_trigger::AdcTrigger10,
         }
     }
 }
@@ -338,106 +283,27 @@ pub struct HrPwmControl {
     pub fault_6: FltMonitor6,
 
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger1: Adc1Trigger,
+    pub adc_trigger1: adc_trigger::AdcTrigger1,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger2: Adc2Trigger,
+    pub adc_trigger2: adc_trigger::AdcTrigger2,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger3: Adc3Trigger,
+    pub adc_trigger3: adc_trigger::AdcTrigger3,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger4: Adc4Trigger,
+    pub adc_trigger4: adc_trigger::AdcTrigger4,
 
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger5: Adc5Trigger,
+    pub adc_trigger5: adc_trigger::AdcTrigger5,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger6: Adc6Trigger,
+    pub adc_trigger6: adc_trigger::AdcTrigger6,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger7: Adc7Trigger,
+    pub adc_trigger7: adc_trigger::AdcTrigger7,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger8: Adc8Trigger,
+    pub adc_trigger8: adc_trigger::AdcTrigger8,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger9: Adc9Trigger,
+    pub adc_trigger9: adc_trigger::AdcTrigger9,
     #[cfg(feature = "stm32g4")]
-    pub adc_trigger10: Adc10Trigger,
+    pub adc_trigger10: adc_trigger::AdcTrigger10,
 }
-
-#[cfg(feature = "stm32g4")]
-macro_rules! impl_adc1234_trigger {
-    ($($t:ident: [$trait_:ident, $adcXr:ident, $variant345:ident $(, $variant12:ident)*]),*) => {$(
-        #[non_exhaustive]
-        pub struct $t;
-
-        impl $t {
-            pub fn enable_source<T: $trait_>(&mut self, _trigger: &T) {
-                let common = unsafe { &*HRTIM_COMMON::ptr() };
-                unsafe {
-                    common.$adcXr().modify(|r, w| w.bits(r.bits() | T::BITS));
-                }
-            }
-        }
-
-        $(impl From<&$t> for hal::adc::config::ExternalTrigger12 {
-            fn from(_val: &$t) -> Self {
-                hal::adc::config::ExternalTrigger12::$variant12
-            }
-        })*
-
-        impl From<&$t> for hal::adc::config::ExternalTrigger345 {
-            fn from(_val: &$t) -> Self {
-                hal::adc::config::ExternalTrigger345::$variant345
-            }
-        }
-    )*}
-}
-
-#[cfg(feature = "stm32g4")]
-macro_rules! impl_adc5678910_trigger {
-    ($($t:ident: [$trait_:ident, $adcXtrg:ident, $variant345:ident, $variant12:ident]),*) => {$(
-        #[non_exhaustive]
-        pub struct $t;
-
-        impl $t {
-            pub fn enable_source<T: $trait_>(&mut self, _trigger: &T) {
-                let common = unsafe { &*HRTIM_COMMON::ptr() };
-                common
-                    .adcer()
-                    .modify(|_r, w| unsafe { w.$adcXtrg().bits(T::BITS as u8) });
-            }
-        }
-
-        impl From<&$t> for hal::adc::config::ExternalTrigger12 {
-            fn from(_val: &$t) -> Self {
-                hal::adc::config::ExternalTrigger12::$variant12
-            }
-        }
-
-        impl From<&$t> for hal::adc::config::ExternalTrigger345 {
-            fn from(_val: &$t) -> Self {
-                hal::adc::config::ExternalTrigger345::$variant345
-            }
-        }
-
-    )*}
-}
-#[cfg(feature = "stm32g4")]
-impl_adc1234_trigger! {//      reg    adc345,          adc12
-    Adc1Trigger: [Adc13Trigger, adc1r, Hrtim_adc_trg_1, Hrtim_adc_trg_1],
-    Adc2Trigger: [Adc24Trigger, adc2r, Hrtim_adc_trg_2],
-    Adc3Trigger: [Adc13Trigger, adc3r, Hrtim_adc_trg_3, Hrtim_adc_trg_3],
-    Adc4Trigger: [Adc24Trigger, adc4r, Hrtim_adc_trg_4]
-}
-
-#[cfg(feature = "stm32g4")]
-impl_adc5678910_trigger! {
-    Adc5Trigger: [Adc579Trigger,  adc5trg, Hrtim_adc_trg_5, Hrtim_adc_trg_5],
-    Adc6Trigger: [Adc6810Trigger, adc6trg, Hrtim_adc_trg_6, Hrtim_adc_trg_6],
-    Adc7Trigger: [Adc579Trigger,  adc7trg, Hrtim_adc_trg_7, Hrtim_adc_trg_7],
-    Adc8Trigger: [Adc6810Trigger, adc8trg, Hrtim_adc_trg_8, Hrtim_adc_trg_8],
-    Adc9Trigger: [Adc579Trigger,  adc9trg, Hrtim_adc_trg_9, Hrtim_adc_trg_9],
-    Adc10Trigger: [Adc6810Trigger, adc10trg, Hrtim_adc_trg_10, Hrtim_adc_trg_10]
-}
-
-#[cfg(feature = "stm32g4")]
-use super::adc_trigger::{Adc13Trigger, Adc24Trigger, Adc579Trigger, Adc6810Trigger};
 
 #[cfg(feature = "stm32g4")]
 pub enum AdcTriggerPostscaler {

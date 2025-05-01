@@ -7,7 +7,6 @@ use panic_probe as _;
 use stm32_hrtim::{
     capture::HrCapture,
     compare_register::HrCompareRegister,
-    control::HrControltExt,
     external_event::{self, ToExternalEventSource},
     output::HrOutput,
     timer::{HrSlaveTimerCpt, HrTimer},
@@ -15,6 +14,7 @@ use stm32_hrtim::{
 };
 use stm32g4xx_hal::{
     gpio::GpioExt,
+    hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stm32::Peripherals,
