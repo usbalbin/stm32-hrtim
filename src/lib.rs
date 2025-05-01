@@ -1,5 +1,35 @@
 #![no_std]
 
+#[cfg(not(any(
+    feature = "stm32f334",
+    feature = "stm32h742",
+    feature = "stm32h743",
+    //feature = "stm32h745",
+    feature = "stm32h747cm7",
+    feature = "stm32h750",
+    feature = "stm32h753",
+    //feature = "stm32h755",
+    //feature = "stm32h757",
+    feature = "stm32g474",
+    feature = "stm32g484",
+)))]
+compile_error!(
+    "This crate requires one of the following features enabled:
+    stm32f334
+
+    stm32h742
+    stm32h743
+    #stm32h745
+    stm32h747cm7
+    stm32h750
+    stm32h753
+    #stm32h755
+    #stm32h757
+
+    stm32g474
+    stm32g484"
+);
+
 pub mod adc_trigger;
 pub mod capture;
 pub mod compare_register;
@@ -12,31 +42,48 @@ pub mod output;
 pub mod timer;
 pub mod timer_eev_cfg;
 
-#[cfg(feature = "stm32f3")]
-#[path = "stm32f3.rs"]
-mod mcu;
+#[cfg(feature = "stm32f334")]
+pub use stm32f3::stm32f3x4 as pac;
 
-#[cfg(feature = "stm32h7")]
-#[path = "stm32h7.rs"]
-mod mcu;
+#[cfg(feature = "stm32h742")]
+pub use stm32h7::stm32h742 as pac;
 
-#[cfg(feature = "stm32g4")]
-#[path = "stm32g4.rs"]
-mod mcu;
+#[cfg(feature = "stm32h743")]
+pub use stm32h7::stm32h743 as pac;
 
-pub use mcu::{hal, stm32, Polarity};
+//#[cfg(feature = "stm32h745")]
+//pub use stm32h7::stm32h745 as pac;
+
+#[cfg(feature = "stm32h747cm7")]
+pub use stm32h7::stm32h747cm7 as pac;
+
+#[cfg(feature = "stm32h750")]
+pub use stm32h7::stm32h750 as pac;
+
+#[cfg(feature = "stm32h753")]
+pub use stm32h7::stm32h753 as pac;
+
+//#[cfg(feature = "stm32h755")]
+//pub use stm32h7::stm32h755 as pac;
+
+//#[cfg(feature = "stm32h757")]
+//pub use stm32h7::stm32h757 as pac;
+
+#[cfg(feature = "stm32g474")]
+pub use stm32g4::stm32g474 as pac;
+
+#[cfg(feature = "stm32g484")]
+pub use stm32g4::stm32g484 as pac;
 
 use core::marker::PhantomData;
 use core::mem::MaybeUninit;
 
 use crate::compare_register::{HrCr1, HrCr2, HrCr3, HrCr4};
 use crate::fault::{FaultAction, FaultSource};
-#[cfg(feature = "hrtim_v2")]
-use crate::stm32::HRTIM_TIMF;
-use crate::stm32::{
-    HRTIM_COMMON, HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME,
-};
 use crate::timer::HrTim;
+#[cfg(feature = "hrtim_v2")]
+use pac::HRTIM_TIMF;
+use pac::{HRTIM_COMMON, HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
 
 use capture::{HrCaptCh1, HrCaptCh2};
 
@@ -45,11 +92,10 @@ use self::control::HrPwmControl;
 use self::deadtime::DeadtimeConfig;
 use self::output::ToHrOut;
 use self::timer_eev_cfg::EevCfgs;
-use fugit::HertzU32 as Hertz;
 
 /// Internal enum that keeps track of the count settings before PWM is finalized
 enum CountSettings {
-    Frequency(Hertz),
+    //Frequency(Hertz),
     Period(u16),
 }
 
@@ -117,17 +163,6 @@ pub enum HrCountingDirection {
     UpDown,
 }
 
-// Needed to calculate frequency
-impl From<HrCountingDirection> for crate::mcu::Alignment {
-    fn from(val: HrCountingDirection) -> Self {
-        match val {
-            HrCountingDirection::Up => crate::mcu::Alignment::Left,
-            #[cfg(feature = "hrtim_v2")]
-            HrCountingDirection::UpDown => crate::mcu::Alignment::Center,
-        }
-    }
-}
-
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum InterleavedMode {
     Disabled,
@@ -181,11 +216,17 @@ pub trait HrPwmAdvExt: Sized {
         PINS: ToHrOut<Self>;
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Polarity {
+    ActiveHigh,
+    ActiveLow,
+}
+
 /// HrPwmBuilder is used to configure advanced HrTim PWM features
 pub struct HrPwmBuilder<TIM, PSCL, PS, PINS> {
     _tim: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
-    pins: PINS,
+    pub pins: PINS,
     timer_mode: HrTimerMode,
     counting_direction: HrCountingDirection,
     //base_freq: HertzU64,
@@ -233,13 +274,10 @@ pub enum MasterPreloadSource {
 }
 
 macro_rules! hrtim_finalize_body {
-    ($this:expr, $PreloadSource:ident, $TIMX:ident, [$($out:ident)*], $($moder:ident, $otyper:ident, $afr:ident)*) => {{
+    ($this:expr, $PreloadSource:ident, $TIMX:ident, [$($out:ident)*]) => {{
         let tim = unsafe { &*$TIMX::ptr() };
         let (period, prescaler_bits) = match $this.count {
             CountSettings::Period(period) => (period as u32, PSCL::BITS as u16),
-            CountSettings::Frequency(_freq) => {
-                todo!()//<TimerHrTim<PSCL>>::calculate_frequency($this.base_freq, freq, $this.counting_direction.into())
-            },
         };
 
         let (half, _intlvd) = match $this.interleaved_mode {
@@ -389,13 +427,6 @@ macro_rules! hrtim_finalize_body {
         // Start timer
         //let master = unsafe { &*HRTIM_MASTER::ptr() };
         //master.mcr.modify(|_r, w| { w.$tXcen().set_bit() });
-
-        // Connect pins and let HRTIM take over control over them
-        $this.pins.connect_to_hrtim($($moder, $otyper, $afr)*);
-
-        unsafe {
-            MaybeUninit::uninit().assume_init()
-        }
     }};
 
     (PreloadSource, $this:expr, $tim:expr) => {{
@@ -437,14 +468,6 @@ macro_rules! hrtim_finalize_body {
 
 macro_rules! hrtim_common_methods {
     ($TIMX:ident, $PS:ident) => {
-        /// Set the PWM frequency; will overwrite the previous prescaler and period
-        /// The requested frequency will be rounded to the nearest achievable frequency; the actual frequency may be higher or lower than requested.
-        pub fn frequency<T: Into<Hertz>>(mut self, freq: T) -> Self {
-            self.count = CountSettings::Frequency(freq.into());
-
-            self
-        }
-
         /// Set the prescaler; PWM count runs at base_frequency/(prescaler+1)
         pub fn prescaler<P>(self, _prescaler: P) -> HrPwmBuilder<$TIMX, P, $PS, PINS>
         where
@@ -473,7 +496,6 @@ macro_rules! hrtim_common_methods {
             } = self;
 
             let period = match count {
-                CountSettings::Frequency(_) => u16::MAX,
                 CountSettings::Period(period) => period,
             };
 
@@ -587,24 +609,12 @@ macro_rules! hrtim_hal {
                 PSCL: HrtimPrescaler,
                 PINS: ToHrOut<$TIMX>,
             {
-                pub fn finalize(self, _control: &mut HrPwmControl,
-                    #[cfg(feature = "stm32f3")]
-                    moder: &mut <PINS::GpioX as hal::gpio::marker::GpioStatic>::MODER,
-                    #[cfg(feature = "stm32f3")]
-                    otyper: &mut <PINS::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-                    #[cfg(feature = "stm32f3")]
-                    afr: &mut PINS::Afr
-                ) -> HrParts<$TIMX, PSCL, PINS::Out<PSCL>> {
-                    #[cfg(feature = "stm32f3")] {
-                        hrtim_finalize_body!(
-                            self, PreloadSource,
-                            $TIMX, [$($out)*], moder, otyper, afr
-                        )
-                    }
-
-                    #[cfg(not(feature = "stm32f3"))] {
-                        hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*],)
-                    }
+                // For HAL writers:
+                // Make sure to connect gpios after calling this function and then it should be safe to
+                // conjure an instance of HrParts<$TIMX, PSCL, PINS::Out<PSCL>>
+                pub fn _init(self, _control: &mut HrPwmControl) -> PINS {
+                    hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*]);
+                    self.pins
                 }
 
                 hrtim_common_methods!($TIMX, PreloadSource);
@@ -739,32 +749,10 @@ where
     PSCL: HrtimPrescaler,
     PINS: ToHrOut<HRTIM_MASTER>,
 {
-    pub fn finalize(
-        self,
-        _control: &mut HrPwmControl,
-        #[cfg(feature = "stm32f3")]
-        moder: &mut <PINS::GpioX as hal::gpio::marker::GpioStatic>::MODER,
-        #[cfg(feature = "stm32f3")]
-        otyper: &mut <PINS::GpioX as hal::gpio::marker::GpioStatic>::OTYPER,
-        #[cfg(feature = "stm32f3")] afr: &mut PINS::Afr,
-    ) -> HrParts<HRTIM_MASTER, PSCL, ()> {
-        #[cfg(feature = "stm32f3")]
-        {
-            hrtim_finalize_body!(
-                self,
-                MasterPreloadSource,
-                HRTIM_MASTER,
-                [],
-                moder,
-                otyper,
-                afr
-            )
-        }
+    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, ()> {
+        hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, []);
 
-        #[cfg(not(feature = "stm32f3"))]
-        {
-            hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, [],)
-        }
+        unsafe { MaybeUninit::uninit().assume_init() }
     }
 
     hrtim_common_methods!(HRTIM_MASTER, MasterPreloadSource);

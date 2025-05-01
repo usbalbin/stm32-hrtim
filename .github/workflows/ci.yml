@@ -15,9 +15,7 @@ jobs:
         rust:
           - stable
         device:
-          - stm32f334x4
-          - stm32f334x6
-          - stm32f334x8
+          - stm32f334
 
           - stm32h742
           - stm32h743

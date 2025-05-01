@@ -7,16 +7,15 @@ use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
     compare_register::HrCompareRegister,
-    control::HrControltExt,
     fault::{FaultAction, FaultMonitor},
     output::HrOutput,
     timer::HrTimer,
-    HrParts, HrPwmAdvExt, Pscl4,
+    HrParts, HrPwmAdvExt, Polarity, Pscl4,
 };
 use stm32g4xx_hal::{
-    self as hal,
     delay::{DelayExt, SYSTDelayExt},
     gpio::GpioExt,
+    hrtim::{fault::FaultInput, HrControltExt, HrPwmBuilderExt},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stm32::{CorePeripherals, Peripherals},
@@ -50,8 +49,8 @@ fn main() -> ! {
 
     let fault_source3 = flt_inputs
         .fault_input3
-        .bind_pin(gpiob.pb10.into_pull_down_input())
-        .polarity(hal::pwm::Polarity::ActiveHigh)
+        .bind(gpiob.pb10.into_pull_down_input().into_alternate())
+        .polarity(Polarity::ActiveHigh)
         .finalize(&mut hr_control);
 
     // ...with a prescaler of 4 this gives us a HrTimer with a tick rate of 1.2GHz
