@@ -499,6 +499,7 @@ where
             out2_polarity,
         } = self;
 
+        #[allow(clippy::infallible_destructuring_match)]
         let period = match count {
             CountSettings::Period(period) => period,
         };
