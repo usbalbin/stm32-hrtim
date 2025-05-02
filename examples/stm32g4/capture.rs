@@ -15,9 +15,9 @@ use stm32_hrtim::{
 use stm32g4xx_hal::{
     gpio::GpioExt,
     hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt},
+    pac::Peripherals,
     pwr::PwrExt,
     rcc::{self, RccExt},
-    stm32::Peripherals,
 };
 
 #[entry]

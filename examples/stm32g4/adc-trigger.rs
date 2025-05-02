@@ -14,9 +14,9 @@ use stm32g4xx_hal::{
     dma::{self, channel::DMAExt, config::DmaConfig, TransferExt},
     gpio::GpioExt,
     hrtim::{HrControltExt, HrPwmBuilderExt},
+    pac::{CorePeripherals, Peripherals},
     pwr::PwrExt,
     rcc::{self, RccExt},
-    stm32::{CorePeripherals, Peripherals},
 };
 
 #[entry]
