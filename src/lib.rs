@@ -241,6 +241,9 @@ pub struct HrPwmBuilder<TIM, PSCL, PS, PINS> {
     deadtime: Option<DeadtimeConfig>,
     enable_repetition_interrupt: bool,
     eev_cfg: EevCfgs<TIM>,
+    // TODO Add DAC triggers for stm32f334 (RM0364 21.3.19) and stm32h7 if applicable
+    #[cfg(feature = "hrtim_v2")]
+    dac_trigger_cfg: Option<DacTriggerCfg>,
     out1_polarity: Polarity,
     out2_polarity: Polarity,
 }
@@ -271,6 +274,111 @@ pub enum PreloadSource {
 pub enum MasterPreloadSource {
     /// Prealoaded registers are updaten when the master counter rolls over and the master repetition counter is 0
     OnMasterRepetitionUpdate,
+}
+
+#[cfg(feature = "hrtim_v2")]
+pub struct DacTriggerCfg {
+    reset_trigger: DacResetTrigger,
+    step_trigger: DacStepTrigger,
+}
+
+#[cfg(feature = "hrtim_v2")]
+impl DacTriggerCfg {
+    /// Edge-aligned slope compensation
+    ///
+    /// The DAC’s sawtooth starts on PWM period beginning and
+    /// multiple triggers are generated during the timer period
+    /// with a trigger interval equal to the CMP2 value.
+    ///
+    /// NOTE:
+    /// Must not be used simultaneously with modes using
+    /// CMP2 (triple / quad interleaved and triggered-half modes).
+    pub const fn edge_aligned_slope() -> Self {
+        Self {
+            reset_trigger: DacResetTrigger::OnCounterReset,
+            step_trigger: DacStepTrigger::OnCmp2,
+        }
+    }
+
+    /// Center-aligned slope compensation
+    ///
+    /// The DAC’s sawtooth starts on the output 1 set event and
+    /// multiple triggers are generated during the timer period
+    /// with a trigger interval equal to the CMP2 value.
+    ///
+    /// NOTE:
+    /// Must not be used simultaneously with modes using
+    /// CMP2 (triple / quad interleaved and triggered-half modes).
+    ///
+    /// NOTE:
+    /// In centered-pattern mode, it is mandatory to have an even
+    /// number of triggers per switching period, so as to avoid
+    /// unevenly spaced triggers around counter’s peak value.
+    pub const fn center_aligned_slope() -> Self {
+        Self {
+            reset_trigger: DacResetTrigger::OnOut1Set,
+            step_trigger: DacStepTrigger::OnCmp2,
+        }
+    }
+
+    /// Hysteretic controller
+    ///
+    /// 2 triggers are generated per PWM period.
+    /// In edge-aligned mode the triggers are generated on counter
+    /// reset or rollover and the output is reset
+    pub const fn edge_aligned_hysteretic() -> Self {
+        Self {
+            reset_trigger: DacResetTrigger::OnCounterReset,
+            step_trigger: DacStepTrigger::OnOut1Rst,
+        }
+    }
+
+    /// Hysteretic controller
+    ///
+    /// 2 triggers are generated per PWM period.
+    /// In center-aligned mode the triggers are generated when the output is
+    /// set and when it is reset.
+    pub const fn center_aligned_hysteretic() -> Self {
+        Self {
+            reset_trigger: DacResetTrigger::OnOut1Set,
+            step_trigger: DacStepTrigger::OnOut1Rst,
+        }
+    }
+}
+
+#[cfg(feature = "hrtim_v2")]
+pub enum DacResetTrigger {
+    /// The trigger is generated on counter reset or roll-over event
+    OnCounterReset = 0,
+
+    /// The trigger is generated on output 1 set event
+    OnOut1Set = 1,
+}
+
+#[cfg(feature = "hrtim_v2")]
+pub enum DacStepTrigger {
+    /// The trigger is generated on compare 2 event repeatedly
+    ///
+    /// The compare 2 has a particular operating mode when using `OnCmp2`. The active
+    /// comparison value is automatically updated as soon as a compare match
+    /// has occured, so that the trigger can be repeated periodically with a period
+    /// equal to the CMP2 value.
+    ///
+    /// NOTE:
+    /// The dual channel DAC trigger with `OnCmp2` must not be
+    /// used simultaneously with modes using CMP2 (triple / quad interleaved
+    /// and triggered-half modes).
+    ///
+    /// Example:
+    /// Let’s consider a counter period = 8192. Dividing 8192 by 6 yields 1365.33.
+    /// – Round down value: 1365: 7 triggers are generated, the 6th and 7th being very
+    /// close (respectively for counter = 8190 and 8192)
+    /// – Round up value:1366: 6 triggers are generated. The 6th trigger on dac_step_trg
+    /// (for counter = 8192) is aborted by the counter roll-over from 8192 to 0.
+    OnCmp2 = 0,
+
+    /// The trigger is generated on output 1 rst event
+    OnOut1Rst = 1,
 }
 
 macro_rules! hrtim_finalize_body {
@@ -316,10 +424,17 @@ macro_rules! hrtim_finalize_body {
             #[allow(unused)]
             let $out = ();
 
+            // TODO Add DAC triggers for stm32f334 (RM0364 21.3.19) and stm32h7 if applicable
             #[cfg(feature = "hrtim_v2")]
             tim.cr2().modify(|_r, w|
                 // Set counting direction
-                w.udm().bit($this.counting_direction == HrCountingDirection::UpDown)
+                w.udm().bit($this.counting_direction == HrCountingDirection::UpDown);
+                if let Some(cfg) = dac_trigger_cfg {
+                    w
+                        .dcde().set_bit()
+                        .dcds().bit(cfg.step_trigger as bool)
+                        .dcdr().bit(cfg.reset_trigger as bool)
+                }
             );
 
             tim.cr().modify(|_r, w|
@@ -491,6 +606,8 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
+                #[cfg(feature = "hrtim_v2")]
+                dac_trigger_cfg,
                 out1_polarity,
                 out2_polarity,
             } = self;
@@ -519,6 +636,8 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
+                #[cfg(feature = "hrtim_v2")]
+                dac_trigger_cfg,
                 out1_polarity,
                 out2_polarity,
             }
@@ -555,6 +674,13 @@ macro_rules! hrtim_common_methods {
 
         pub fn eev_cfg(mut self, eev_cfg: EevCfgs<$TIMX>) -> Self {
             self.eev_cfg = eev_cfg;
+            self
+        }
+
+        #[cfg(feature = "hrtim_v2")]
+        /// Enable dac trigger with provided settings
+        pub fn dac_trigger_cfg(mut self, cfg: DacTriggerCfg>) -> Self {
+            self.dac_trigger_cfg = Some(cfg);
             self
         }
     };
