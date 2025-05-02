@@ -204,7 +204,7 @@ impl<TIM: Instance, PSCL: HrtimPrescaler, CPT1, CPT2> HrTimer for HrTim<TIM, PSC
     fn set_period(&mut self, period: u16) {
         let tim = unsafe { &*TIM::ptr() };
 
-        tim.perr().write(|w| unsafe { w.per().bits(period as u16) });
+        tim.perr().write(|w| unsafe { w.per().bits(period) });
     }
 
     /// Start timer

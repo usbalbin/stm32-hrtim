@@ -1,9 +1,9 @@
 use core::marker::PhantomData;
 
 use crate::ext::{Cmp, MasterExt};
+use crate::pac::HRTIM_MASTER;
 #[cfg(feature = "hrtim_v2")]
-use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::pac::{HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME, HRTIM_TIMF};
 use crate::timer::{Instance, InstanceX};
 
 pub trait HrCompareRegister {
