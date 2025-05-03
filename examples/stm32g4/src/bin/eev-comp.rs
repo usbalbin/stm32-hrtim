@@ -55,7 +55,7 @@ fn main() -> ! {
     let pin_a = gpioa.pa8;
 
     let dac1ch1 = dp.DAC1.constrain(dac::Dac1IntSig1, &mut rcc);
-    let mut dac = dac1ch1.calibrate_buffer(&mut delay).enable();
+    let mut dac = dac1ch1.calibrate_buffer(&mut delay).enable(&mut rcc);
 
     // Use dac to define the fault threshold
     // 2^12 / 2 = 2^11 for about half of VCC

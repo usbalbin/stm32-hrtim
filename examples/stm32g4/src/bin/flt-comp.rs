@@ -61,7 +61,7 @@ fn main() -> ! {
     let gpioc = dp.GPIOC.split(&mut rcc);
 
     let dac3ch1 = dp.DAC3.constrain(Dac3IntSig1, &mut rcc);
-    let mut dac = dac3ch1.enable();
+    let mut dac = dac3ch1.enable(&mut rcc);
 
     // Use dac to define the fault threshold
     // 2^12 / 2 = 2^11 for about half of VCC
