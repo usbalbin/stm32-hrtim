@@ -40,9 +40,34 @@ jobs:
           target: thumbv7em-none-eabihf
           override: true
 
+      - name: fmt
+        run: cargo fmt --check
       - name: Regular build
         run: cargo check --features ${{ matrix.device }} --features ${{ matrix.features }}
-      - name: Build examples
-        run: cargo check --examples --features ${{ matrix.device }} --features ${{ matrix.features }}
       - name: Clippy
         run: cargo clippy --examples --features ${{ matrix.device }} --features ${{ matrix.features }}
+  
+  examples:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+        device-series:
+          - stm32g4
+          #- stm32f3
+          #- stm32h7
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: thumbv7em-none-eabihf
+          override: true
+      - name: Build stm32g4 examples
+        run: cd examples/${{ matrix.device-series }}; cargo check --bins
+      - name: Clippy
+        run: cd examples/${{ matrix.device-series }}; cargo clippy --bins --features ${{ matrix.device }}
+      - name: fmt
+        run: cd examples/${{ matrix.device-series }}; cargo fmt --check
