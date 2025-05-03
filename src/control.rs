@@ -12,7 +12,7 @@ use super::{external_event::EevInputs, fault::FaultInputs};
 
 impl HrTimOngoingCalibration {
     /// Look in the hal for an corresponding extension trait for `HRTIM_COMMON`.
-    /// 
+    ///
     /// ..unless you are the one implementing the hal
     ///
     /// # Safety
