@@ -3,18 +3,12 @@ name = "stm32-hrtim"
 version = "0.1.0"
 edition = "2021"
 
-[patch.crates-io]
-stm32-hrtim = { path = "." }
-
-[patch."https://github.com/usbalbin/stm32-hrtim"]
-stm32-hrtim = { path = "." }
-
 [dependencies]
 stm32f3 = { git = "https://github.com/stm32-rs/stm32-rs-nightlies", optional = true }
 stm32h7 = { git = "https://github.com/stm32-rs/stm32-rs-nightlies", features = ["critical-section"], optional = true }
 stm32g4 = { version = "0.22.0", package = "stm32g4-staging", optional = true }
 
-defmt = { version = "0.3.10", optional = true }
+defmt = { version = "1", optional = true }
 fugit = "0.3.7"
 
 [dev-dependencies]
@@ -22,7 +16,6 @@ cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 defmt-rtt = "0.4.0"
 cortex-m-rt = "0.7.2"
 panic-probe = { version = "0.3.0", features = ["print-defmt"] }
-stm32g4xx-hal = { git = "https://github.com/usbalbin/stm32g4xx-hal", branch = "hrtim", features = ["defmt", "hrtim"] }
 
 [features]
 default = []
@@ -46,53 +39,6 @@ stm32h753 = ["stm32h7/stm32h753", "hrtim_v1_1"]
 #stm32h755 = ["stm32h7/stm32h755", "hrtim_v1_1"]
 #stm32h757 = ["stm32h7/stm32h757", "hrtim_v1_1"]
 
-stm32g474 = ["stm32g4/stm32g474", "stm32g4xx-hal/stm32g474", "hrtim_v2"]
-stm32g484 = ["stm32g4/stm32g484", "stm32g4xx-hal/stm32g484", "hrtim_v2"]
+stm32g474 = ["stm32g4/stm32g474", "hrtim_v2"]
+stm32g484 = ["stm32g4/stm32g484", "hrtim_v2"]
 defmt = ["dep:defmt", "fugit/defmt"]
-
-# G4
-
-[[example]]
-name = "stm32g4-adc-trigger"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/adc-trigger.rs"
-
-[[example]]
-name = "stm32g4-capture"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/capture.rs"
-
-[[example]]
-name = "stm32g4-capture-dma"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/capture-dma.rs"
-
-[[example]]
-name = "stm32g4-eev-comp"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/eev-comp.rs"
-
-[[example]]
-name = "stm32g4-eev"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/eev.rs"
-
-[[example]]
-name = "stm32g4-flt-comp"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/flt-comp.rs"
-
-[[example]]
-name = "stm32g4-flt"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/flt.rs"
-
-[[example]]
-name = "stm32g4"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/hrtim.rs"
-
-[[example]]
-name = "stm32g4-master"
-required-features = ["stm32g4"]
-path = "examples/stm32g4/master.rs"

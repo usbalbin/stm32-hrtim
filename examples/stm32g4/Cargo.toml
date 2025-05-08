@@ -1,0 +1,25 @@
+[package]
+name = "stm32-rs-hrtim-stm32g4-examples"
+version = "0.1.0"
+edition = "2024"
+publish = ["gitea"]
+
+[patch.crates-io]
+stm32-hrtim = { path = "../../" }
+
+[patch."https://github.com/usbalbin/stm32-hrtim"]
+stm32-hrtim = { path = "../../" }
+
+[dependencies]
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
+defmt-rtt = "0.4.0"
+cortex-m-rt = "0.7.2"
+panic-probe = { version = "0.3.0", features = ["print-defmt"] }
+stm32g4xx-hal = { git = "https://github.com/usbalbin/stm32g4xx-hal", branch = "hrtim", features = ["defmt", "hrtim"] }
+stm32-hrtim = { path = "../../", features = ["defmt"] }
+defmt = "1.0.1"
+fugit = "0.3.7"
+
+[features]
+stm32g474 = ["stm32-hrtim/stm32g474", "stm32g4xx-hal/stm32g474"]
+stm32g484 = ["stm32-hrtim/stm32g484", "stm32g4xx-hal/stm32g484"]

@@ -1,24 +1,26 @@
 #![no_std]
 #![no_main]
 
+use defmt_rtt as _;
+
 /// Example showcasing the use of the HRTIM peripheral together with a comparator to implement a cycle by cycle current limit.
 /// Once the comparator input exceeds the reference set by the DAC, the output is set low thus limiting the pulse width and in turn the current.
 use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
+    HrParts, HrPwmAdvExt, Polarity, Pscl4,
     compare_register::HrCompareRegister,
     external_event::{self, ToExternalEventSource},
     output::HrOutput,
     timer::HrTimer,
     timer_eev_cfg::{EevCfg, EevCfgs},
-    HrParts, HrPwmAdvExt, Polarity, Pscl4,
 };
 use stm32g4xx_hal::{
     comparator::{self, ComparatorExt, ComparatorSplit},
     dac::{self, DacExt, DacOut},
     delay::SYSTDelayExt,
     gpio::{GpioExt, SignalEdge},
-    hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt},
+    hrtim::{HrControltExt, HrPwmBuilderExt, external_event::EevInputExt},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stm32::{CorePeripherals, Peripherals},
@@ -53,7 +55,7 @@ fn main() -> ! {
     let pin_a = gpioa.pa8;
 
     let dac1ch1 = dp.DAC1.constrain(dac::Dac1IntSig1, &mut rcc);
-    let mut dac = dac1ch1.calibrate_buffer(&mut delay).enable();
+    let mut dac = dac1ch1.calibrate_buffer(&mut delay).enable(&mut rcc);
 
     // Use dac to define the fault threshold
     // 2^12 / 2 = 2^11 for about half of VCC

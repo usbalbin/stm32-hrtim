@@ -1,17 +1,19 @@
 #![no_std]
 #![no_main]
 
+use defmt_rtt as _;
+
 /// Example showcasing the use of the HRTIM peripheral to trigger the ADC at various points of the switch cycle off HRTIM_TIMA
 use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
-    compare_register::HrCompareRegister, output::HrOutput, timer::HrTimer, HrParts, HrPwmAdvExt,
-    Pscl4,
+    HrParts, HrPwmAdvExt, Pscl4, compare_register::HrCompareRegister, output::HrOutput,
+    timer::HrTimer,
 };
 use stm32g4xx_hal::{
     adc::{self, AdcClaim, ClockSource, Temperature, Vref},
     delay::SYSTDelayExt,
-    dma::{self, channel::DMAExt, config::DmaConfig, TransferExt},
+    dma::{self, TransferExt, channel::DMAExt, config::DmaConfig},
     gpio::GpioExt,
     hrtim::{HrControltExt, HrPwmBuilderExt},
     pwr::PwrExt,

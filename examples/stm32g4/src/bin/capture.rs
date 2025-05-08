@@ -1,20 +1,22 @@
 #![no_std]
 #![no_main]
 
+use defmt_rtt as _;
+
 /// Example showcasing the use of the HRTIM peripheral's capture function to detect phase shift between a digital event and the output of HRTIM_TIMA
 use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
+    HrParts, HrPwmAdvExt, Pscl128,
     capture::HrCapture,
     compare_register::HrCompareRegister,
     external_event::{self, ToExternalEventSource},
     output::HrOutput,
     timer::{HrSlaveTimerCpt, HrTimer},
-    HrParts, HrPwmAdvExt, Pscl128,
 };
 use stm32g4xx_hal::{
     gpio::GpioExt,
-    hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt},
+    hrtim::{HrControltExt, HrPwmBuilderExt, external_event::EevInputExt},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stm32::Peripherals,

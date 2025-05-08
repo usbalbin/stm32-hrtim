@@ -1,21 +1,23 @@
 #![no_std]
 #![no_main]
 
+use defmt_rtt as _;
+
 /// Example showcasing the use of the HRTIM peripheral together with a digital input to implement a cycle by cycle current limit.
 /// Once the digital input goes high, the output is set low thus limiting the pulse width and in turn the current.
 use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
+    HrParts, HrPwmAdvExt, Polarity, Pscl4,
     compare_register::HrCompareRegister,
     external_event::{self, ToExternalEventSource},
     output::HrOutput,
     timer::HrTimer,
     timer_eev_cfg::EevCfgs,
-    HrParts, HrPwmAdvExt, Polarity, Pscl4,
 };
 use stm32g4xx_hal::{
     gpio::GpioExt,
-    hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt},
+    hrtim::{HrControltExt, HrPwmBuilderExt, external_event::EevInputExt},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stm32::Peripherals,
