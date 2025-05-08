@@ -145,7 +145,7 @@ macro_rules! hrtim_timer {
                 // Stop counter
                 // SAFETY: Since we hold _hr_control there is no risk for a race condition
                 let master = unsafe { &*HRTIM_MASTER::ptr() };
-                master.cr().modify(|_r, w| { w.$tXcen().set_bit() });
+                master.cr().modify(|_r, w| { w.$tXcen().clear_bit() });
             }
 
             /// Stop timer and reset counter
