@@ -1,6 +1,9 @@
 #[cfg(feature = "hrtim_v2")]
 use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::{
+    pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
+    DacRstTrg, NoDacTrg,
+};
 use core::marker::PhantomData;
 
 use super::{
@@ -9,9 +12,10 @@ use super::{
     HrtimPrescaler,
 };
 
-pub struct HrTim<TIM, PSCL, CPT1, CPT2> {
+pub struct HrTim<TIM, PSCL, CPT1, CPT2, DAC_RST_TRG: DacRstTrg = NoDacTrg> {
     _timer: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
+    _dac_trg: PhantomData<DAC_RST_TRG>,
     capture_ch1: CPT1,
     capture_ch2: CPT2,
 }
@@ -263,6 +267,7 @@ macro_rules! hrtim_timer {
                     let HrTim{
                         _timer,
                         _prescaler,
+                        _dac_trg,
                         capture_ch1,
                         capture_ch2,
                     } = self;
@@ -271,6 +276,7 @@ macro_rules! hrtim_timer {
                         timer: HrTim{
                             _timer,
                             _prescaler,
+                            _dac_trg,
                             capture_ch1: (),
                             capture_ch2: (),
                         },
