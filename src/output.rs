@@ -2,7 +2,7 @@
 use crate::pac::HRTIM_TIMF;
 use crate::{
     pac::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
-    DacRstTrg, DacStpTrg, NoDacTrg,
+    DacResetTrigger, DacStepTrigger, NoDacTrigger,
 };
 use core::marker::PhantomData;
 
@@ -10,7 +10,7 @@ use super::event::EventSource;
 
 macro_rules! hrtim_out {
     ($($TIMX:ident: $out_type:ident: $tXYoen:ident, $tXYodis:ident, $tXYods:ident, $setXYr:ident, $rstXYr:ident, ($($R:ident, $S:ident)*),)+) => {$(
-        impl<PSCL, R: DacRstTrg, S: DacStpTrg> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL, R, S> {
+        impl<PSCL, R: DacResetTrigger, S: DacStepTrigger> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL, R, S> {
             fn enable(&mut self) {
                 let common = unsafe { &*HRTIM_COMMON::ptr() };
                 common.oenr().write(|w| { w.$tXYoen().set_bit() });
@@ -156,12 +156,18 @@ where
 
 // NOTE: Only HrOut1 can actually be used as a dac trigger
 
-pub struct HrOut1<TIM, PSCL, DAC_RST_TRG: DacRstTrg = NoDacTrg, DAC_STP_TRG: DacStpTrg = NoDacTrg>(
-    PhantomData<(TIM, PSCL, DAC_RST_TRG, DAC_STP_TRG)>,
-);
-pub struct HrOut2<TIM, PSCL, DAC_RST_TRG: DacRstTrg = NoDacTrg, DAC_STP_TRG: DacStpTrg = NoDacTrg>(
-    PhantomData<(TIM, PSCL, DAC_RST_TRG, DAC_STP_TRG)>,
-);
+pub struct HrOut1<
+    TIM,
+    PSCL,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+>(PhantomData<(TIM, PSCL, DacRst, DacStp)>);
+pub struct HrOut2<
+    TIM,
+    PSCL,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+>(PhantomData<(TIM, PSCL, DacRst, DacStp)>);
 
 unsafe impl<T> ToHrOut<T> for () {
     type Out<PSCL> = ();

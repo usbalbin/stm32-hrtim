@@ -4,7 +4,7 @@ use core::marker::PhantomData;
 use crate::pac::HRTIM_TIMF;
 use crate::{
     pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
-    DacRstTrg, DacStpTrg, NoDacTrg,
+    DacStepTrigger, NoDacTrigger,
 };
 
 pub trait HrCompareRegister {
@@ -14,17 +14,17 @@ pub trait HrCompareRegister {
 
 // TODO: Note that only HrCr2 can actually be used as a dac trigger
 
-pub struct HrCr1<TIM, PSCL, DAC_STP_TRG: DacStpTrg = NoDacTrg>(
-    PhantomData<(TIM, PSCL, DAC_STP_TRG)>,
+pub struct HrCr1<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
 );
-pub struct HrCr2<TIM, PSCL, DAC_STP_TRG: DacStpTrg = NoDacTrg>(
-    PhantomData<(TIM, PSCL, DAC_STP_TRG)>,
+pub struct HrCr2<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
 );
-pub struct HrCr3<TIM, PSCL, DAC_STP_TRG: DacStpTrg = NoDacTrg>(
-    PhantomData<(TIM, PSCL, DAC_STP_TRG)>,
+pub struct HrCr3<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
 );
-pub struct HrCr4<TIM, PSCL, DAC_STP_TRG: DacStpTrg = NoDacTrg>(
-    PhantomData<(TIM, PSCL, DAC_STP_TRG)>,
+pub struct HrCr4<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
 );
 
 #[cfg(feature = "stm32g4")]
@@ -50,7 +50,7 @@ macro_rules! hrtim_cr_helper {
         [$(($event_dst:ident, $tim_event_index:expr)),*],
         [$($bit_index:literal)*]
     ) => {
-        impl<PSCL, S: DacStpTrg> HrCompareRegister for $cr_type<$TIMX, PSCL, S> {
+        impl<PSCL, S: DacStepTrigger> HrCompareRegister for $cr_type<$TIMX, PSCL, S> {
             fn get_duty(&self) -> u16 {
                 let tim = unsafe { &*$TIMX::ptr() };
 

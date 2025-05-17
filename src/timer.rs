@@ -2,7 +2,7 @@
 use crate::pac::HRTIM_TIMF;
 use crate::{
     pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
-    DacRstTrg, NoDacTrg,
+    DacResetTrigger, NoDacTrigger,
 };
 use core::marker::PhantomData;
 
@@ -12,10 +12,10 @@ use super::{
     HrtimPrescaler,
 };
 
-pub struct HrTim<TIM, PSCL, CPT1, CPT2, DAC_RST_TRG: DacRstTrg = NoDacTrg> {
+pub struct HrTim<TIM, PSCL, CPT1, CPT2, DacRst: DacResetTrigger = NoDacTrigger> {
     _timer: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
-    _dac_trg: PhantomData<DAC_RST_TRG>,
+    _dac_trg: PhantomData<DacRst>,
     capture_ch1: CPT1,
     capture_ch2: CPT2,
 }
