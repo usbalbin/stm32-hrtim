@@ -16,7 +16,15 @@ use stm32_hrtim::{
     timer_eev_cfg::{EevCfg, EevCfgs},
 };
 use stm32g4xx_hal::{
-    comparator::{self, ComparatorExt, ComparatorSplit}, dac::{self, DacExt, DacOut}, delay::SYSTDelayExt, gpio::{GpioExt, SignalEdge}, hrtim::{external_event::EevInputExt, HrControltExt, HrPwmBuilderExt}, pwr::PwrExt, rcc::{self, RccExt}, stasis::Freeze, stm32::{CorePeripherals, Peripherals}
+    comparator::{self, ComparatorExt, ComparatorSplit},
+    dac::{self, DacExt, DacOut},
+    delay::SYSTDelayExt,
+    gpio::{GpioExt, SignalEdge},
+    hrtim::{HrControltExt, HrPwmBuilderExt, external_event::EevInputExt},
+    pwr::PwrExt,
+    rcc::{self, RccExt},
+    stasis::Freeze,
+    stm32::{CorePeripherals, Peripherals},
 };
 
 #[entry]
@@ -48,7 +56,10 @@ fn main() -> ! {
     let pin_a = gpioa.pa8;
 
     let dac1ch1 = dp.DAC1.constrain(dac::Dac1IntSig1, &mut rcc);
-    let (mut dac, [dac_token]) = dac1ch1.calibrate_buffer(&mut delay).enable(&mut rcc).freeze();
+    let (mut dac, [dac_token]) = dac1ch1
+        .calibrate_buffer(&mut delay)
+        .enable(&mut rcc)
+        .freeze();
 
     // Use dac to define the fault threshold
     // 2^12 / 2 = 2^11 for about half of VCC

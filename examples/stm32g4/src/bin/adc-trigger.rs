@@ -11,9 +11,9 @@ use stm32_hrtim::{
     timer::HrTimer,
 };
 use stm32g4xx_hal::{
-    adc::{self, temperature::Temperature, AdcClaim, AdcCommonExt, Vref},
+    adc::{self, AdcClaim, AdcCommonExt, Vref, temperature::Temperature},
     delay::SYSTDelayExt,
-    dma::{self, channel::DMAExt, config::DmaConfig, TransferExt},
+    dma::{self, TransferExt, channel::DMAExt, config::DmaConfig},
     gpio::GpioExt,
     hrtim::{HrControltExt, HrPwmBuilderExt},
     pwr::PwrExt,
