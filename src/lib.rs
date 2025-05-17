@@ -632,9 +632,7 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
-                #[cfg(feature = "hrtim_v2")]
                 dac_rst_trigger,
-                #[cfg(feature = "hrtim_v2")]
                 dac_stp_trigger,
                 out1_polarity,
                 out2_polarity,
