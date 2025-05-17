@@ -326,9 +326,7 @@ pub struct HrPwmBuilder<
     enable_repetition_interrupt: bool,
     eev_cfg: EevCfgs<TIM>,
     // TODO Add DAC triggers for stm32f334 (RM0364 21.3.19) and stm32h7 if applicable
-    #[cfg(feature = "hrtim_v2")]
     dac_rst_trigger: PhantomData<DacRst>,
-    #[cfg(feature = "hrtim_v2")]
     dac_stp_trigger: PhantomData<DacStp>,
     out1_polarity: Polarity,
     out2_polarity: Polarity,
@@ -600,9 +598,7 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
-                #[cfg(feature = "hrtim_v2")]
                 dac_rst_trigger,
-                #[cfg(feature = "hrtim_v2")]
                 dac_stp_trigger,
                 out1_polarity,
                 out2_polarity,
@@ -746,10 +742,8 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
-                #[cfg(feature = "hrtim_v2")]
-                    dac_rst_trigger: _,
-                #[cfg(feature = "hrtim_v2")]
-                    dac_stp_trigger: _,
+                dac_rst_trigger: _,
+                dac_stp_trigger: _,
                 out1_polarity,
                 out2_polarity,
             } = self;
@@ -772,9 +766,7 @@ macro_rules! hrtim_common_methods {
                 deadtime,
                 enable_repetition_interrupt,
                 eev_cfg,
-                #[cfg(feature = "hrtim_v2")]
                 dac_rst_trigger: PhantomData,
-                #[cfg(feature = "hrtim_v2")]
                 dac_stp_trigger: PhantomData,
                 out1_polarity,
                 out2_polarity,
@@ -820,9 +812,7 @@ macro_rules! hrtim_hal {
                         deadtime: None,
                         enable_repetition_interrupt: false,
                         eev_cfg: EevCfgs::default(),
-                        #[cfg(feature = "hrtim_v2")]
                         dac_rst_trigger: PhantomData,
-                        #[cfg(feature = "hrtim_v2")]
                         dac_stp_trigger: PhantomData,
                         out1_polarity: Polarity::ActiveHigh,
                         out2_polarity: Polarity::ActiveHigh,
@@ -967,9 +957,7 @@ impl HrPwmAdvExt for HRTIM_MASTER {
             deadtime: None,
             enable_repetition_interrupt: false,
             eev_cfg: EevCfgs::default(),
-            #[cfg(feature = "hrtim_v2")]
             dac_rst_trigger: PhantomData,
-            #[cfg(feature = "hrtim_v2")]
             dac_stp_trigger: PhantomData,
             out1_polarity: Polarity::ActiveHigh,
             out2_polarity: Polarity::ActiveHigh,
