@@ -11,7 +11,7 @@ use stm32_hrtim::{
     timer::HrTimer,
 };
 use stm32g4xx_hal::{
-    adc::{self, AdcClaim, ClockSource, Temperature, Vref},
+    adc::{self, AdcClaim, AdcCommonExt, Vref, temperature::Temperature},
     delay::SYSTDelayExt,
     dma::{self, TransferExt, channel::DMAExt, config::DmaConfig},
     gpio::GpioExt,
@@ -105,15 +105,16 @@ fn main() -> ! {
     out2.enable_set_event(&timer);
 
     defmt::info!("Setup Adc1");
-    let mut adc = dp
-        .ADC1
-        .claim(ClockSource::SystemClock, &rcc, &mut delay, true);
+    let mut adc12_common = dp
+        .ADC12_COMMON
+        .claim(adc::config::ClockMode::AdcHclkDiv4, &mut rcc);
+    let mut adc = adc12_common.claim(dp.ADC1, &mut delay);
 
     adc.set_external_trigger((
         adc::config::TriggerMode::RisingEdge,
         (&hr_control.adc_trigger1).into(),
     ));
-    adc.enable_temperature(&dp.ADC12_COMMON);
+    adc12_common.enable_temperature();
     adc.set_continuous(adc::config::Continuous::Discontinuous);
     adc.reset_sequence();
     adc.configure_channel(

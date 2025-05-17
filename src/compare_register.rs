@@ -2,17 +2,30 @@ use core::marker::PhantomData;
 
 #[cfg(feature = "hrtim_v2")]
 use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::{
+    pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
+    DacStepTrigger, NoDacTrigger,
+};
 
 pub trait HrCompareRegister {
     fn get_duty(&self) -> u16;
     fn set_duty(&mut self, duty: u16);
 }
 
-pub struct HrCr1<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
-pub struct HrCr2<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
-pub struct HrCr3<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
-pub struct HrCr4<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
+// TODO: Note that only HrCr2 can actually be used as a dac trigger
+
+pub struct HrCr1<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
+);
+pub struct HrCr2<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
+);
+pub struct HrCr3<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
+);
+pub struct HrCr4<TIM, PSCL, DacStp: DacStepTrigger = NoDacTrigger>(
+    PhantomData<(TIM, PSCL, DacStp)>,
+);
 
 #[cfg(feature = "stm32g4")]
 use super::adc_trigger::{
@@ -25,19 +38,19 @@ macro_rules! hrtim_cr_helper {
         $cmpXYr:ident,
         [$(($Trigger:ty: $trigger_bits:expr)),*],
         [$(($event_dst:ident, $tim_event_index:expr)),*],
-        $bit_index:literal
+        [$bit_index:literal]
     ) => {
         // Strip bit_index since master timer has other bits that are common across all destinations
-        hrtim_cr_helper!(HRTIM_MASTER: $cr_type: $cmpXYr, [$(($Trigger: $trigger_bits)),*], [$(($event_dst, $tim_event_index)),*]);
+        hrtim_cr_helper!(HRTIM_MASTER: $cr_type: $cmpXYr, [$(($Trigger: $trigger_bits)),*], [$(($event_dst, $tim_event_index)),*], []);
     };
 
     ($TIMX:ident: $cr_type:ident:
         $cmpXYr:ident,
         [$(($Trigger:ty: $trigger_bits:expr)),*],
-        [$(($event_dst:ident, $tim_event_index:expr)),*]
-        $(, $bit_index:literal)*
+        [$(($event_dst:ident, $tim_event_index:expr)),*],
+        [$($bit_index:literal)*]
     ) => {
-        impl<PSCL> HrCompareRegister for $cr_type<$TIMX, PSCL> {
+        impl<PSCL, S: DacStepTrigger> HrCompareRegister for $cr_type<$TIMX, PSCL, S> {
             fn get_duty(&self) -> u16 {
                 let tim = unsafe { &*$TIMX::ptr() };
 
@@ -79,10 +92,10 @@ macro_rules! hrtim_cr {
         [$(($cr3_trigger:ident: $cr3_trigger_bits:expr)),*], [$(($cr3_event_dst:ident, $cr3_tim_event_index:expr)),*],
         [$(($cr4_trigger:ident: $cr4_trigger_bits:expr)),*], [$(($cr4_event_dst:ident, $cr4_tim_event_index:expr)),*]
     ]),+) => {$(
-        hrtim_cr_helper!($TIMX: HrCr1: cmp1r, [$(($cr1_trigger: $cr1_trigger_bits)),*], [$(($cr1_event_dst, $cr1_tim_event_index)),*], 3);
-        hrtim_cr_helper!($TIMX: HrCr2: cmp2r, [$(($cr2_trigger: $cr2_trigger_bits)),*], [$(($cr2_event_dst, $cr2_tim_event_index)),*], 4);
-        hrtim_cr_helper!($TIMX: HrCr3: cmp3r, [$(($cr3_trigger: $cr3_trigger_bits)),*], [$(($cr3_event_dst, $cr3_tim_event_index)),*], 5);
-        hrtim_cr_helper!($TIMX: HrCr4: cmp4r, [$(($cr4_trigger: $cr4_trigger_bits)),*], [$(($cr4_event_dst, $cr4_tim_event_index)),*], 6);
+        hrtim_cr_helper!($TIMX: HrCr1: cmp1r, [$(($cr1_trigger: $cr1_trigger_bits)),*], [$(($cr1_event_dst, $cr1_tim_event_index)),*], [3]);
+        hrtim_cr_helper!($TIMX: HrCr2: cmp2r, [$(($cr2_trigger: $cr2_trigger_bits)),*], [$(($cr2_event_dst, $cr2_tim_event_index)),*], [4]);
+        hrtim_cr_helper!($TIMX: HrCr3: cmp3r, [$(($cr3_trigger: $cr3_trigger_bits)),*], [$(($cr3_event_dst, $cr3_tim_event_index)),*], [5]);
+        hrtim_cr_helper!($TIMX: HrCr4: cmp4r, [$(($cr4_trigger: $cr4_trigger_bits)),*], [$(($cr4_event_dst, $cr4_tim_event_index)),*], [6]);
     )+};
 }
 

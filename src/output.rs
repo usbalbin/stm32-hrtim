@@ -1,13 +1,16 @@
 #[cfg(feature = "hrtim_v2")]
 use crate::pac::HRTIM_TIMF;
-use crate::pac::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME};
+use crate::{
+    pac::{HRTIM_COMMON, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
+    DacResetTrigger, DacStepTrigger, NoDacTrigger,
+};
 use core::marker::PhantomData;
 
 use super::event::EventSource;
 
 macro_rules! hrtim_out {
-    ($($TIMX:ident: $out_type:ident: $tXYoen:ident, $tXYodis:ident, $tXYods:ident, $setXYr:ident, $rstXYr:ident,)+) => {$(
-        impl<PSCL> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL> {
+    ($($TIMX:ident: $out_type:ident: $tXYoen:ident, $tXYodis:ident, $tXYods:ident, $setXYr:ident, $rstXYr:ident, ($($R:ident, $S:ident)*),)+) => {$(
+        impl<PSCL, R: DacResetTrigger, S: DacStepTrigger> HrOutput<$TIMX, PSCL> for $out_type<$TIMX, PSCL, R, S> {
             fn enable(&mut self) {
                 let common = unsafe { &*HRTIM_COMMON::ptr() };
                 common.oenr().write(|w| { w.$tXYoen().set_bit() });
@@ -57,26 +60,26 @@ macro_rules! hrtim_out {
 }
 
 hrtim_out! {
-    HRTIM_TIMA: HrOut1: ta1oen, ta1odis, ta1ods, set1r, rst1r,
-    HRTIM_TIMA: HrOut2: ta2oen, ta2odis, ta2ods, set2r, rst2r,
+    HRTIM_TIMA: HrOut1: ta1oen, ta1odis, ta1ods, set1r, rst1r, (R, S),
+    HRTIM_TIMA: HrOut2: ta2oen, ta2odis, ta2ods, set2r, rst2r, (),
 
-    HRTIM_TIMB: HrOut1: tb1oen, tb1odis, tb1ods, set1r, rst1r,
-    HRTIM_TIMB: HrOut2: tb2oen, tb2odis, tb2ods, set2r, rst2r,
+    HRTIM_TIMB: HrOut1: tb1oen, tb1odis, tb1ods, set1r, rst1r, (R, S),
+    HRTIM_TIMB: HrOut2: tb2oen, tb2odis, tb2ods, set2r, rst2r, (),
 
-    HRTIM_TIMC: HrOut1: tc1oen, tc1odis, tc1ods, set1r, rst1r,
-    HRTIM_TIMC: HrOut2: tc2oen, tc2odis, tc2ods, set2r, rst2r,
+    HRTIM_TIMC: HrOut1: tc1oen, tc1odis, tc1ods, set1r, rst1r, (R, S),
+    HRTIM_TIMC: HrOut2: tc2oen, tc2odis, tc2ods, set2r, rst2r, (),
 
-    HRTIM_TIMD: HrOut1: td1oen, td1odis, td1ods, set1r, rst1r,
-    HRTIM_TIMD: HrOut2: td2oen, td2odis, td2ods, set2r, rst2r,
+    HRTIM_TIMD: HrOut1: td1oen, td1odis, td1ods, set1r, rst1r, (R, S),
+    HRTIM_TIMD: HrOut2: td2oen, td2odis, td2ods, set2r, rst2r, (),
 
-    HRTIM_TIME: HrOut1: te1oen, te1odis, te1ods, set1r, rst1r,
-    HRTIM_TIME: HrOut2: te2oen, te2odis, te2ods, set2r, rst2r,
+    HRTIM_TIME: HrOut1: te1oen, te1odis, te1ods, set1r, rst1r, (R, S),
+    HRTIM_TIME: HrOut2: te2oen, te2odis, te2ods, set2r, rst2r, (),
 }
 
 #[cfg(feature = "hrtim_v2")]
 hrtim_out! {
-    HRTIM_TIMF: HrOut1: tf1oen, tf1odis, tf1ods, set1r, rst1r,
-    HRTIM_TIMF: HrOut2: tf2oen, tf2odis, tf2ods, set2r, rst2r,
+    HRTIM_TIMF: HrOut1: tf1oen, tf1odis, tf1ods, set1r, rst1r, (R, S),
+    HRTIM_TIMF: HrOut2: tf2oen, tf2odis, tf2ods, set2r, rst2r, (),
 }
 
 pub trait HrOutput<TIM, PSCL> {
@@ -134,7 +137,12 @@ impl State {
 /// Caller needs to ensure that this is only implemented
 /// for types that represent pin that can act as an output
 /// for the specified timer `TIM`
-pub unsafe trait ToHrOut<TIM> {
+pub unsafe trait ToHrOut<
+    TIM,
+    const IS_DAC_RST_TRIGGER: bool = false,
+    const IS_DAC_STP_TRIGGER: bool = false,
+>
+{
     type Out<PSCL>;
 }
 
@@ -146,12 +154,21 @@ where
     type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
 }
 
-pub struct HrOut1<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
-pub struct HrOut2<TIM, PSCL>(PhantomData<(TIM, PSCL)>);
+// NOTE: Only HrOut1 can actually be used as a dac trigger
+
+pub struct HrOut1<
+    TIM,
+    PSCL,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+>(PhantomData<(TIM, PSCL, DacRst, DacStp)>);
+pub struct HrOut2<
+    TIM,
+    PSCL,
+    DacRst: DacResetTrigger = NoDacTrigger,
+    DacStp: DacStepTrigger = NoDacTrigger,
+>(PhantomData<(TIM, PSCL, DacRst, DacStp)>);
 
 unsafe impl<T> ToHrOut<T> for () {
     type Out<PSCL> = ();
 }
-
-pub struct CH1<PSCL>(PhantomData<PSCL>);
-pub struct CH2<PSCL>(PhantomData<PSCL>);
