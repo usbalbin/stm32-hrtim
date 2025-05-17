@@ -1,0 +1,8 @@
+{
+  "rust-analyzer.check.allTargets": false,
+  "rust-analyzer.check.extraArgs": [
+    "--bins"
+  ],
+  "rust-analyzer.cargo.target": "thumbv7em-none-eabihf",
+  "rust-analyzer.cargo.features": ["stm32g474"]
+}
