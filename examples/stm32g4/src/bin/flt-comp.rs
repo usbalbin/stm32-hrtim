@@ -16,7 +16,17 @@ use stm32_hrtim::{
     timer::HrTimer,
 };
 use stm32g4xx_hal::{
-    self as hal, adc::{config::ClockMode, AdcClaim, AdcCommonExt}, comparator::{self, ComparatorExt, ComparatorSplit}, dac::{Dac3IntSig1, DacExt, DacOut}, delay::{DelayExt as _, SYSTDelayExt}, gpio::GpioExt, hrtim::{fault::FaultInput, HrControltExt, HrPwmBuilderExt}, pwr::PwrExt, rcc::{self, RccExt}, stasis::Freeze, stm32::{CorePeripherals, Peripherals}
+    self as hal,
+    adc::{AdcClaim, AdcCommonExt, config::ClockMode},
+    comparator::{self, ComparatorExt, ComparatorSplit},
+    dac::{Dac3IntSig1, DacExt, DacOut},
+    delay::{DelayExt as _, SYSTDelayExt},
+    gpio::GpioExt,
+    hrtim::{HrControltExt, HrPwmBuilderExt, fault::FaultInput},
+    pwr::PwrExt,
+    rcc::{self, RccExt},
+    stasis::Freeze,
+    stm32::{CorePeripherals, Peripherals},
 };
 
 #[entry]
