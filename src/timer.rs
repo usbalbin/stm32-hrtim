@@ -46,6 +46,11 @@ pub trait HrTimer {
     /// NOTE: This will affect the maximum duty usable for `HrCompareRegister::set_duty`
     fn set_period(&mut self, period: u16);
 
+    /// Get the current counter value
+    ///
+    /// NOTE: The least significant bits may not be significant depending on prescaler
+    fn get_counter_value(&self) -> u16;
+
     /// Start timer
     fn start(&mut self, _hr_control: &mut HrPwmCtrl);
 
@@ -141,6 +146,11 @@ macro_rules! hrtim_timer {
                 let tim = unsafe { &*$TIMX::ptr() };
 
                 tim.perr().write(|w| unsafe { w.per().bits(period as u16) });
+            }
+
+            fn get_counter_value(&self) -> u16 {
+                let tim = unsafe { &*$TIMX::ptr() };
+                tim.cntr().read().cnt().bits()
             }
 
             /// Start timer
