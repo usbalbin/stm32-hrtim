@@ -826,7 +826,7 @@ macro_rules! hrtim_hal {
                 DacRst: DacResetTrigger,
                 DacStp: DacStepTrigger,
                 PSCL: HrtimPrescaler,
-                PINS: ToHrOut<$TIMX>,
+                PINS: ToHrOut<$TIMX, DacRst, DacStp>,
             {
                 // For HAL writers:
                 // Make sure to connect gpios after calling this function and then it should be safe to
