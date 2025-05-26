@@ -147,8 +147,8 @@ where
 
 unsafe impl<TIM, PA, PB, DacRst, DacStp> ToHrOut<TIM, DacRst, DacStp> for (PA, PB)
 where
-    PA: ToHrOut<TIM>,
-    PB: ToHrOut<TIM>,
+    PA: ToHrOut<TIM, DacRst, DacStp>,
+    PB: ToHrOut<TIM, DacRst, DacStp>,
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
 {
