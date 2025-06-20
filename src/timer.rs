@@ -1,10 +1,17 @@
 #[cfg(feature = "hrtim_v2")]
 use crate::pac::HRTIM_TIMF;
 use crate::{
-    pac::{HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
+    pac::{HRTIM_COMMON, HRTIM_MASTER, HRTIM_TIMA, HRTIM_TIMB, HRTIM_TIMC, HRTIM_TIMD, HRTIM_TIME},
     DacResetTrigger, NoDacTrigger,
 };
 use core::marker::PhantomData;
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub enum SwapPins {
+    Normal,
+    Swapped,
+}
 
 use super::{
     capture::{self, HrCapt, HrCapture},
@@ -99,6 +106,9 @@ pub trait HrSlaveTimer: HrTimer {
         &mut self,
         _event: &E,
     );
+
+    /// This is only allowed while having register preload enabled (PREEN is set to 1)
+    unsafe fn swap_outputs(&self, _hr_control: &mut HrPwmCtrl, swap: SwapPins);
 }
 
 pub struct TimerSplitCapture<T, PSCL, CH1, CH2, DacRst: DacResetTrigger> {
@@ -130,7 +140,7 @@ macro_rules! hrtim_timer {
         $TIMX:ident:
         $tXcen:ident,
         $tXudis:ident,
-        $(($rstXr:ident))*,
+        $([$rstXr:ident, $swpX:ident])*,
     )+) => {$(
         impl<PSCL: HrtimPrescaler, CPT1, CPT2, DacRst: DacResetTrigger> HrTimer for HrTim<$TIMX, PSCL, CPT1, CPT2, DacRst> {
             type Prescaler = PSCL;
@@ -269,6 +279,13 @@ macro_rules! hrtim_timer {
 
                     unsafe { tim.$rstXr().modify(|r, w| w.bits(r.bits() & !E::BITS)); }
                 }
+
+                /// This is only allowed while having register preload enabled (PREEN is set to 1)
+                unsafe fn swap_outputs(&self, _hr_control: &mut HrPwmCtrl, swap: SwapPins) {
+                    // SAFETY: Since we hold _hr_control there is no risk for a race condition
+                    let common = unsafe { &*HRTIM_COMMON::ptr() };
+                    common.cr2().modify(|_r, w| { w.$swpX().bit(swap == SwapPins::Swapped) });
+                }
             }
 
             impl<PSCL, DacRst> HrSlaveTimerCpt for HrTim<$TIMX, PSCL, HrCapt<$TIMX, PSCL, capture::Ch1, capture::NoDma>, HrCapt<$TIMX, PSCL, capture::Ch2, capture::NoDma>, DacRst>
@@ -357,14 +374,14 @@ use super::adc_trigger::{
 hrtim_timer! {
     HRTIM_MASTER: mcen, mudis,,
 
-    HRTIM_TIMA: tacen, taudis, (rstr),
-    HRTIM_TIMB: tbcen, tbudis, (rstr),
-    HRTIM_TIMC: tccen, tcudis, (rstr),
-    HRTIM_TIMD: tdcen, tdudis, (rstr),
-    HRTIM_TIME: tecen, teudis, (rstr),
+    HRTIM_TIMA: tacen, taudis, [rstr, swpa],
+    HRTIM_TIMB: tbcen, tbudis, [rstr, swpb],
+    HRTIM_TIMC: tccen, tcudis, [rstr, swpc],
+    HRTIM_TIMD: tdcen, tdudis, [rstr, swpd],
+    HRTIM_TIME: tecen, teudis, [rstr, swpe],
 }
 #[cfg(feature = "hrtim_v2")]
-hrtim_timer! {HRTIM_TIMF: tfcen, tfudis, (rstr),}
+hrtim_timer! {HRTIM_TIMF: tfcen, tfudis, [rstr, swpf],}
 
 #[cfg(feature = "stm32g4")]
 hrtim_timer_adc_trigger! {
