@@ -21,10 +21,10 @@ use stm32g4xx_hal::{
     delay::SYSTDelayExt,
     gpio::{GpioExt, SignalEdge},
     hrtim::{HrControltExt, HrPwmBuilderExt, external_event::EevInputExt},
+    pac::{CorePeripherals, Peripherals},
     pwr::PwrExt,
     rcc::{self, RccExt},
     stasis::Freeze,
-    stm32::{CorePeripherals, Peripherals},
 };
 
 #[entry]
