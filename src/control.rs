@@ -293,7 +293,7 @@ impl<'a> Foo<'a> {
 }
 
 impl HrPwmCtrl {
-    /// Start/stop mutliple timers at the exact same time
+    /// Start/stop multiple timers at the exact same time
     ///
     /// ```
     /// let mut timer_a = ...;

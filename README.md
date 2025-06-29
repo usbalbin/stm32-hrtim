@@ -1,10 +1,10 @@
 # stm32-hrtim
 
-This crate implements a driver for the HRTIM peripheral found in select devices from F3, G4 and H7 series of STM32 microcontrollers. The HRTIM peripheral is a high resolution timer that allows precise control even at higher frequencies.
+This crate implements a driver for the HRTIM peripheral found in select devices from F3, G4 and H7 series of STM32 micro controllers. The HRTIM peripheral is a high resolution timer that allows precise control even at higher frequencies.
 
 The HRTIM is primarily intended to drive power conversion systems such as switch mode power
 supplies or lighting systems, but can be of general purpose usage, whenever a very fine
-timing resolution is expected. It is very flexible allowing complicated waveforms and suport connections to various other peripherals like DACs, ADCs, comparators, other timers, DMA etc.
+timing resolution is expected. It is very flexible allowing complicated waveforms and support connections to various other peripherals like DACs, ADCs, comparators, other timers, DMA etc.
 
 ### Status
 

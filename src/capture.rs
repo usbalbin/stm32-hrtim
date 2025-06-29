@@ -70,7 +70,7 @@ pub trait HrCapture {
         }
     }
 
-    /// Get number of ticks relative to beginning of upcounting
+    /// Get number of ticks relative to beginning of up counting
     ///
     /// where captures during down counting count as negative (before the upcount)
     ///
@@ -87,7 +87,7 @@ pub trait HrCapture {
     /// Negative result | positive result
     /// ```
     ///
-    /// NOTE: This function will use [`Self::is_pending`] to chech if there is a value available and
+    /// NOTE: This function will use [`Self::is_pending`] to check if there is a value available and
     /// [`Self::clear_interrupt`] to clear it.
     fn get_signed(&mut self, period: u16) -> Option<i32> {
         if self.is_pending() {
@@ -101,7 +101,7 @@ pub trait HrCapture {
 
     fn get_last(&self) -> (u16, CountingDirection);
 
-    /// Get number of ticks relative to beginning of upcounting
+    /// Get number of ticks relative to beginning of up counting
     ///
     /// where captures during down counting count as negative (before the upcount)
     ///
@@ -190,7 +190,7 @@ impl<TIM: InstanceX, CH: ChExt, PSCL> HrCapt<TIM, PSCL, CH, NoDma> {
 
     // TODO: It would be sufficient to instead of hr_control only require exclusive access to the owning timer
     // however that would be hard to do since typically the capture device is a field of that same timer.
-    // Would it make more sense to have this method direcly on HrTim instead?
+    // Would it make more sense to have this method directly on HrTim instead?
     pub fn enable_interrupt(&mut self, enable: bool, _hr_control: &mut super::HrPwmControl) {
         let tim = unsafe { &*TIM::ptr() };
 
@@ -198,7 +198,7 @@ impl<TIM: InstanceX, CH: ChExt, PSCL> HrCapt<TIM, PSCL, CH, NoDma> {
     }
 
     pub fn enable_dma(self, _ch: timer::DmaChannel<TIM>) -> HrCapt<TIM, PSCL, CH, Dma> {
-        // SAFETY: We own the only insance of this timers dma channel, no one else can do this
+        // SAFETY: We own the only instance of this timers dma channel, no one else can do this
         let tim = unsafe { &*TIM::ptr() };
         tim.dier().modify(|_r, w| w.cptde(CH::CH as _).set_bit());
         HrCapt { _x: PhantomData }
