@@ -90,6 +90,8 @@ fn main() -> ! {
     out1.enable();
     out2.enable();
 
+    timer.start(&mut hr_control.control);
+
     loop {
         // Step frequency from 14.6kHz to about 146kHz(half of that when only looking at one pin)
         for i in 1..=10 {

@@ -6,10 +6,10 @@ use defmt_rtt as _;
 use cortex_m_rt::entry;
 use panic_probe as _;
 use stm32_hrtim::{
-    HrParts, HrPwmAdvExt, HrTimerMode, MasterPreloadSource, PreloadSource, Pscl4,
     compare_register::HrCompareRegister,
     output::HrOutput,
     timer::{HrSlaveTimer, HrTimer},
+    HrParts, HrPwmAdvExt, HrTimerMode, MasterPreloadSource, PreloadSource, Pscl4,
 };
 use stm32g4xx_hal::{
     delay::{DelayExt, SYSTDelayExt},
@@ -105,6 +105,11 @@ fn main() -> ! {
 
     out1.enable();
     out2.enable();
+
+    hr_control.control.start_stop_timers(|w| w
+        .start(&mut mtimer)
+        .start(&mut timer)
+    );
 
     defmt::info!("Running");
 
