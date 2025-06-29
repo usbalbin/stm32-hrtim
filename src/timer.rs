@@ -7,6 +7,13 @@ use crate::{
 use core::{marker::PhantomData, ops::Deref};
 
 pub use super::ext::{Chan, Cmp};
+#[derive(Debug, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub enum SwapPins {
+    Normal,
+    Swapped,
+}
+
 use super::{
     capture::{self, HrCapt, HrCapture},
     control::HrPwmCtrl,
@@ -186,6 +193,10 @@ pub trait HrSlaveTimer: HrTimer {
         &mut self,
         _event: &E,
     );
+
+    #[cfg(feature = "stm32g4")]
+    /// This is only allowed while having register preload enabled (PREEN is set to 1)
+    unsafe fn swap_outputs(&self, _hr_control: &mut HrPwmCtrl, swap: SwapPins);
 }
 
 pub struct TimerSplitCapture<T, PSCL, CH1, CH2, DacRst: DacResetTrigger> {
@@ -372,6 +383,18 @@ where
         unsafe {
             tim.rstr().modify(|r, w| w.bits(r.bits() & !E::BITS));
         }
+    }
+
+    #[cfg(feature = "stm32g4")]
+    /// This is only allowed while having register preload enabled (PREEN is set to 1)
+    unsafe fn swap_outputs(&self, _hr_control: &mut HrPwmCtrl, swap: SwapPins) {
+        use super::HRTIM_COMMON;
+
+        // SAFETY: Since we hold _hr_control there is no risk for a race condition
+        let common = unsafe { &*HRTIM_COMMON::ptr() };
+        common
+            .cr2()
+            .modify(|_r, w| w.swp(TIM::T_X as u8).bit(swap == SwapPins::Swapped));
     }
 }
 
