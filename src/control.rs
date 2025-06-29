@@ -6,7 +6,7 @@ use crate::fault::{
     FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitorSys,
 };
 
-use crate::timer;
+use crate::timer::{self, HrTimer};
 use crate::{pac, pac::HRTIM_COMMON};
 
 use super::{external_event::EevInputs, fault::FaultInputs};
@@ -272,16 +272,20 @@ pub struct HrPwmCtrl;
 pub struct Foo<'a>(&'a mut pac::hrtim_master::cr::W);
 
 impl<'a> Foo<'a> {
-    pub fn start<TIM: timer::Instance>(self, _t: &mut TIM) -> Self {
+    pub fn start<T: HrTimer>(self, _t: &mut T) -> Self {
+        use crate::timer::Instance;
+
         let w = self.0;
-        Foo(match TIM::TIMX {
+        Foo(match T::Timer::TIMX {
             timer::Timer::Master => w.mcen().set_bit(),
             timer::Timer::Tim(v) => w.tcen(v as _).set_bit(),
         })
     }
-    pub fn stop<TIM: timer::Instance>(self, _t: &mut TIM) -> Self {
+    pub fn stop<T: HrTimer>(self, _t: &mut T) -> Self {
+        use crate::timer::Instance;
+
         let w = self.0;
-        Foo(match TIM::TIMX {
+        Foo(match T::Timer::TIMX {
             timer::Timer::Master => w.mcen().clear_bit(),
             timer::Timer::Tim(v) => w.tcen(v as _).clear_bit(),
         })

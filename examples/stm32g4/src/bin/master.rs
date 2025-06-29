@@ -106,6 +106,10 @@ fn main() -> ! {
     out1.enable();
     out2.enable();
 
+    hr_control
+        .control
+        .start_stop_timers(|w| w.start(&mut mtimer).start(&mut timer));
+
     defmt::info!("Running");
 
     loop {

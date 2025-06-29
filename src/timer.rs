@@ -115,7 +115,7 @@ pub struct DmaChannel<TIM> {
 }
 
 pub trait HrTimer {
-    type Timer;
+    type Timer: Instance;
     type Prescaler: HrtimPrescaler;
     type DacResetTrigger: DacResetTrigger;
 
