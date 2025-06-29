@@ -6,7 +6,8 @@ use crate::fault::{
     FltMonitor1, FltMonitor2, FltMonitor3, FltMonitor4, FltMonitor5, FltMonitorSys,
 };
 
-use crate::pac::HRTIM_COMMON;
+use crate::timer;
+use crate::{pac, pac::HRTIM_COMMON};
 
 use super::{external_event::EevInputs, fault::FaultInputs};
 
@@ -267,6 +268,44 @@ impl<'a> From<&'a mut HrPwmControl> for &'a mut HrPwmCtrl {
 /// An instance of this object can be obtained from [`HrPwmControl`].control
 #[non_exhaustive]
 pub struct HrPwmCtrl;
+
+pub struct Foo<'a>(&'a mut pac::hrtim_master::cr::W);
+
+impl<'a> Foo<'a> {
+    pub fn start<TIM: timer::Instance>(self, _t: &mut TIM) -> Self {
+        let w = self.0;
+        Foo(match TIM::TIMX {
+            timer::Timer::Master => w.mcen().set_bit(),
+            timer::Timer::Tim(v) => w.tcen(v as _).set_bit(),
+        })
+    }
+    pub fn stop<TIM: timer::Instance>(self, _t: &mut TIM) -> Self {
+        let w = self.0;
+        Foo(match TIM::TIMX {
+            timer::Timer::Master => w.mcen().clear_bit(),
+            timer::Timer::Tim(v) => w.tcen(v as _).clear_bit(),
+        })
+    }
+}
+
+impl HrPwmCtrl {
+    /// Start/stop mutliple timers at the exact same time
+    ///
+    /// ```
+    /// let mut timer_a = ...;
+    /// let mut timer_b = ...;
+    /// let mut timer_c = ...;
+    /// hr_control.start_stop_timers(|w| w
+    ///     .start(&mut timer_a)
+    ///     .start(&mut timer_b)
+    ///     .stop(&mut timer_c)
+    /// );
+    /// ```
+    pub fn start_stop_timers(&mut self, p: impl FnOnce(Foo) -> Foo) {
+        let master = unsafe { pac::HRTIM_MASTER::steal() };
+        master.cr().modify(|_, w| p(Foo(w)).0);
+    }
+}
 
 /// Used as a token to guarantee unique access to resources common to multiple timers
 #[non_exhaustive]
