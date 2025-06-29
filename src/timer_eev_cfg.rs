@@ -14,7 +14,7 @@ pub struct EevCfgs<TIM> {
 
     // TODO: Expose these
     // TODO: Note there are some peculiarities here with fast mode
-    // One way to prevent missuse would be to require a borrowed ExternalEventSource<IS_FAST> when setting
+    // One way to prevent misuse would be to require a borrowed ExternalEventSource<IS_FAST> when setting
     // filter/latching as well as the event_counter related settings below.
     #[cfg(feature = "hrtim_v2")]
     pub(crate) event_counter_enable_bit: bool,

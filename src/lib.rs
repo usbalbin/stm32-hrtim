@@ -110,7 +110,7 @@ pub enum HrTimerMode {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum HrCountingDirection {
-    /// Asymetrical up counting mode
+    /// Asymmetrical up counting mode
     ///
     ///
     ///                   *                  *
@@ -155,7 +155,7 @@ pub enum HrCountingDirection {
     ///
     /// NOTE: This is incompatible with
     /// * Auto-delay
-    /// * Balanded Idle
+    /// * Balanced Idle
     /// * Triggered-half mode
     ///
     /// There is also differences in (including but not limited to) the following areas:
@@ -172,7 +172,7 @@ pub enum InterleavedMode {
     /// Dual interleaved or Half mode
     ///
     /// Automatically force
-    /// * Cr1 to PERIOD / 2 (not visable through `get_duty`).
+    /// * Cr1 to PERIOD / 2 (not visible through `get_duty`).
     ///
     /// Automatically updates when changing period
     ///
@@ -186,7 +186,7 @@ pub enum InterleavedMode {
     /// * Cr1 to 1 * PERIOD / 3 and
     /// * Cr2 to 2 * PERIOD / 3
     ///
-    /// (not visable through `get_duty`). Automatically updates when changing period.
+    /// (not visible through `get_duty`). Automatically updates when changing period.
     ///
     /// NOTE: Must not be used simultaneously with other modes
     /// using CMP2 (dual channel dac trigger and triggered-half modes).
@@ -200,7 +200,7 @@ pub enum InterleavedMode {
     /// * Cr2 to 2 * PERIOD / 4 and
     /// * Cr3 to 3 * PERIOD / 4
     ///
-    /// (not visable through `get_duty`). Automatically updates when changing period.
+    /// (not visible through `get_duty`). Automatically updates when changing period.
     ///
     /// NOTE: Must not be used simultaneously with other modes
     /// using CMP2 (dual channel dac trigger and triggered-half modes).
@@ -272,7 +272,7 @@ impl DacResetTrigger for DacResetOnOut1Set {
 ///
 /// The compare 2 has a particular operating mode when using `OnCmp2`. The active
 /// comparison value is automatically updated as soon as a compare match
-/// has occured, so that the trigger can be repeated periodically with a period
+/// has occurred, so that the trigger can be repeated periodically with a period
 /// equal to the CMP2 value.
 ///
 /// NOTE:
@@ -359,12 +359,12 @@ pub enum PreloadSource {
     /// Preloaded registers are updated by master timer update
     OnMasterTimerUpdate,
 
-    /// Prealoaded registers are updaten when the counter rolls over and the repetition counter is 0
+    /// Prealoaded registers are updated when the counter rolls over and the repetition counter is 0
     OnRepetitionUpdate,
 }
 
 pub enum MasterPreloadSource {
-    /// Prealoaded registers are updaten when the master counter rolls over and the master repetition counter is 0
+    /// Preloaded registers are updated when the master counter rolls over and the master repetition counter is 0
     OnMasterRepetitionUpdate,
 }
 
@@ -477,7 +477,7 @@ macro_rules! hrtim_finalize_body {
                 } = deadtime;
 
                 // SAFETY: DeadtimeConfig makes sure rising and falling values are valid
-                // and DeadtimePrescaler has its own garantuee
+                // and DeadtimePrescaler has its own guarantee
                 tim.dtr().modify(|_r, w| w
                     .dtprsc().bits(prescaler as u8)
                     .dtr().bits(deadtime_rising_value)
