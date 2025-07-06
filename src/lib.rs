@@ -101,6 +101,7 @@ enum CountSettings {
     Period(u16),
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum HrTimerMode {
     SingleShotNonRetriggerable,
@@ -108,6 +109,7 @@ pub enum HrTimerMode {
     Continuous,
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum HrCountingDirection {
     /// Asymmetrical up counting mode
@@ -165,6 +167,7 @@ pub enum HrCountingDirection {
     UpDown,
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum InterleavedMode {
     Disabled,
@@ -218,6 +221,7 @@ pub trait HrPwmAdvExt: Sized {
         PINS: ToHrOut<Self>;
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Polarity {
     ActiveHigh,
@@ -236,6 +240,8 @@ pub trait DacResetTrigger {
     const DCDR_BIT: Option<bool>;
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct NoDacTrigger;
 
 impl DacStepTrigger for NoDacTrigger {
@@ -253,6 +259,8 @@ impl DacResetTrigger for NoDacTrigger {
 }
 
 /// The trigger is generated on counter reset or roll-over event
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DacResetOnCounterReset;
 impl DacResetTrigger for DacResetOnCounterReset {
     const IS_TIM_RST: bool = true;
@@ -261,6 +269,8 @@ impl DacResetTrigger for DacResetOnCounterReset {
 }
 
 /// The trigger is generated on output 1 set event
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DacResetOnOut1Set;
 impl DacResetTrigger for DacResetOnOut1Set {
     const IS_TIM_RST: bool = false;
@@ -286,6 +296,8 @@ impl DacResetTrigger for DacResetOnOut1Set {
 /// close (respectively for counter = 8190 and 8192)
 /// – Round up value:1366: 6 triggers are generated. The 6th trigger on dac_step_trg
 /// (for counter = 8192) is aborted by the counter roll-over from 8192 to 0.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DacStepOnCmp2;
 impl DacStepTrigger for DacStepOnCmp2 {
     const IS_CR2: bool = true;
@@ -294,6 +306,8 @@ impl DacStepTrigger for DacStepOnCmp2 {
 }
 
 /// The trigger is generated on output 1 rst event
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DacStepOnOut1Rst;
 impl DacStepTrigger for DacStepOnOut1Rst {
     const IS_CR2: bool = false;
@@ -1020,6 +1034,7 @@ pub unsafe trait HrtimPrescaler: Default {
 
 macro_rules! impl_pscl {
     ($($t:ident => $b:literal, $v:literal, $min:literal, $max:literal)+) => {$(
+        #[cfg_attr(feature = "defmt", derive(defmt::Format))]
         #[derive(Copy, Clone, Default)]
         pub struct $t;
         unsafe impl HrtimPrescaler for $t {

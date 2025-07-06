@@ -4,6 +4,7 @@ use crate::Polarity;
 use super::control::HrTimCalibrated;
 
 #[non_exhaustive]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, PartialEq)]
 pub struct ExternalEventSource<const N: u8, const IS_FAST: bool>;
 
@@ -48,12 +49,14 @@ pub unsafe trait EevSrcBits<const EEV_N: u8>: Sized {
     fn cfg(self) {}
 }
 
-#[derive()]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum EdgeOrPolarity {
     Edge(Edge),
     Polarity(Polarity),
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Edge {
     Rising = 0b01,
@@ -61,6 +64,7 @@ pub enum Edge {
     Both = 0b11,
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum EevSamplingFilter {
     /// No filtering, fault acts asynchronously

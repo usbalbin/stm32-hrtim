@@ -77,6 +77,7 @@ macro_rules! impl_faults {
         pub struct $input;
 
         #[non_exhaustive]
+        #[cfg_attr(feature = "defmt", derive(defmt::Format))]
         #[derive(Copy, Clone)]
         pub struct $source;
 
