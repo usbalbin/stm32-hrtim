@@ -27,6 +27,4 @@ This crate is being developed and lots of things are still subject to change. It
 | stm32h757 |      TODO      |
 
 ### Usage
-This driver is intended for use through a device hal library. See [stm32g4xx-hal](https://github.com/usbalbin/stm32g4xx-hal/tree/hrtim) as a reference.
-
-*TODO update link once stm32-rs/stm32g4xx-hal#192 is merged.*
+This driver is intended for use through a device hal library. See [stm32g4xx-hal](https://github.com/stm32-rs/stm32g4xx-hal/) as a reference.
