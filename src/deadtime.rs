@@ -1,3 +1,4 @@
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, Debug)]
 pub struct DeadtimeConfig {
     /// Prescaler for both rising and falling deadtime
@@ -66,6 +67,7 @@ impl Default for DeadtimeConfig {
     }
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Copy, Clone, Debug)]
 pub enum DeadtimePrescaler {
     ThrtimDiv8 = 0b000,

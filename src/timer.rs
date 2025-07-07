@@ -44,6 +44,7 @@ impl ChExt for Ch2 {
     const CH: Chan = Chan::Ch2;
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Timer {
@@ -51,6 +52,7 @@ pub enum Timer {
     Tim(TimX),
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum TimX {
