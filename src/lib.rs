@@ -366,6 +366,8 @@ pub struct HrParts<
     pub dma_channel: timer::DmaChannel<TIM>,
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum PreloadSource {
     /// Preloaded registers are updated on counter roll over or counter reset
     OnCounterReset,
@@ -377,6 +379,8 @@ pub enum PreloadSource {
     OnRepetitionUpdate,
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum MasterPreloadSource {
     /// Preloaded registers are updated when the master counter rolls over and the master repetition counter is 0
     OnMasterRepetitionUpdate,

@@ -104,6 +104,8 @@ impl<TIM> EevCfg<TIM> {
 }
 
 /// Note: Whenever a compare register is used for filtering, the value must be strictly above 0.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum EventFilter {
     /// No filtering
     None = 0b0000,

@@ -18,6 +18,8 @@ pub trait FaultMonitor {
     fn clear_fault(&mut self);
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum FaultAction {
     /// Output never enters fault mode
     None = 0b00,
@@ -168,6 +170,8 @@ impl FaultInputs {
     }
 }
 
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum FaultSamplingFilter {
     /// No filtering, fault acts asynchronously
     ///

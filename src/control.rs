@@ -349,6 +349,8 @@ pub struct HrPwmControl {
 }
 
 #[cfg(feature = "stm32g4")]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum AdcTriggerPostscaler {
     None = 0,
     Div2 = 1,
@@ -385,6 +387,8 @@ pub enum AdcTriggerPostscaler {
 }
 
 /// The divsion ratio between f_hrtim and the fault signal sampling clock for digital filters
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Debug, Clone, Copy)]
 pub enum SamplingClkDiv {
     /// No division
     ///
