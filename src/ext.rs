@@ -180,14 +180,14 @@ wrap_r! {
 
 wrap_w! {
     pub trait MasterCrW {
-        fn ckpsc(&mut self) -> master::cr::CKPSC_W<REG>;
-        fn cont(&mut self) -> master::cr::CONT_W<REG>;
-        fn retrig(&mut self) -> master::cr::RETRIG_W<REG>;
-        fn half(&mut self) -> master::cr::HALF_W<REG>;
-        fn syncrst(&mut self) -> master::cr::SYNCRST_W<REG>;
-        fn syncstrt(&mut self) -> master::cr::SYNCSTRT_W<REG>;
-        fn dacsync(&mut self) -> master::cr::DACSYNC_W<REG>;
-        fn preen(&mut self) -> master::cr::PREEN_W<REG>;
+        fn ckpsc(&mut self) -> master::cr::CKPSC_W<'_, REG>;
+        fn cont(&mut self) -> master::cr::CONT_W<'_, REG>;
+        fn retrig(&mut self) -> master::cr::RETRIG_W<'_, REG>;
+        fn half(&mut self) -> master::cr::HALF_W<'_, REG>;
+        fn syncrst(&mut self) -> master::cr::SYNCRST_W<'_, REG>;
+        fn syncstrt(&mut self) -> master::cr::SYNCSTRT_W<'_, REG>;
+        fn dacsync(&mut self) -> master::cr::DACSYNC_W<'_, REG>;
+        fn preen(&mut self) -> master::cr::PREEN_W<'_, REG>;
     }
 }
 
@@ -204,13 +204,13 @@ pub trait TimCrR {
 }
 wrap_w! {
     pub trait TimCrW {
-        fn pshpll(&mut self) -> tima::cr::PSHPLL_W<REG>;
-        fn delcmp2(&mut self) -> tima::cr::DELCMP2_W<REG>;
-        fn delcmp4(&mut self) -> tima::cr::DELCMP4_W<REG>;
-        fn mstu(&mut self) -> tima::cr::MSTU_W<REG>;
-        fn trepu(&mut self) -> tima::cr::TREPU_W<REG>;
-        fn trstu(&mut self) -> tima::cr::TRSTU_W<REG>;
-        fn updgat(&mut self) -> tima::cr::UPDGAT_W<REG>;
+        fn pshpll(&mut self) -> tima::cr::PSHPLL_W<'_, REG>;
+        fn delcmp2(&mut self) -> tima::cr::DELCMP2_W<'_, REG>;
+        fn delcmp4(&mut self) -> tima::cr::DELCMP4_W<'_, REG>;
+        fn mstu(&mut self) -> tima::cr::MSTU_W<'_, REG>;
+        fn trepu(&mut self) -> tima::cr::TREPU_W<'_, REG>;
+        fn trstu(&mut self) -> tima::cr::TRSTU_W<'_, REG>;
+        fn updgat(&mut self) -> tima::cr::UPDGAT_W<'_, REG>;
     }
 }
 
@@ -233,9 +233,9 @@ wrap_r! {
 }
 wrap_w! {
     pub trait MasterIcr {
-        fn cmpc(&mut self, cmp: Cmp) -> master::icr::CMPC_W<REG>;
-        fn repc(&mut self) -> master::icr::CMPC_W<REG>;
-        fn updc(&mut self) -> master::icr::CMPC_W<REG>;
+        fn cmpc(&mut self, cmp: Cmp) -> master::icr::CMPC_W<'_, REG>;
+        fn repc(&mut self) -> master::icr::CMPC_W<'_, REG>;
+        fn updc(&mut self) -> master::icr::CMPC_W<'_, REG>;
     }
 }
 
@@ -249,9 +249,9 @@ wrap_r! {
 
 wrap_w! {
     pub trait MasterDierW {
-        fn cmpie(&mut self, cmp: Cmp) -> master::dier::CMPIE_W<REG>;
-        fn repie(&mut self) -> master::dier::REPIE_W<REG>;
-        fn updie(&mut self) -> master::dier::UPDIE_W<REG>;
+        fn cmpie(&mut self, cmp: Cmp) -> master::dier::CMPIE_W<'_, REG>;
+        fn repie(&mut self) -> master::dier::REPIE_W<'_, REG>;
+        fn updie(&mut self) -> master::dier::UPDIE_W<'_, REG>;
     }
 }
 
@@ -270,14 +270,14 @@ wrap_r! {
 
 wrap_w! {
     pub trait Set1rW {
-        fn sst(&mut self) -> tima::set1r::SST_W<REG>;
-        fn resync(&mut self) -> tima::set1r::RESYNC_W<REG>;
-        fn per(&mut self) -> tima::set1r::PER_W<REG>;
-        fn cmp(&mut self, cmp: Cmp) -> tima::set1r::CMP_W<REG>;
-        fn mstper(&mut self) -> tima::set1r::MSTPER_W<REG>;
-        fn mstcmp(&mut self, cmp: Cmp) -> tima::set1r::MSTCMP_W<REG>;
-        fn extevnt(&mut self, e: ExtEvnt) -> tima::set1r::EXTEVNT_W<REG>;
-        fn update(&mut self) -> tima::set1r::UPDATE_W<REG>;
+        fn sst(&mut self) -> tima::set1r::SST_W<'_, REG>;
+        fn resync(&mut self) -> tima::set1r::RESYNC_W<'_, REG>;
+        fn per(&mut self) -> tima::set1r::PER_W<'_, REG>;
+        fn cmp(&mut self, cmp: Cmp) -> tima::set1r::CMP_W<'_, REG>;
+        fn mstper(&mut self) -> tima::set1r::MSTPER_W<'_, REG>;
+        fn mstcmp(&mut self, cmp: Cmp) -> tima::set1r::MSTCMP_W<'_, REG>;
+        fn extevnt(&mut self, e: ExtEvnt) -> tima::set1r::EXTEVNT_W<'_, REG>;
+        fn update(&mut self) -> tima::set1r::UPDATE_W<'_, REG>;
     }
 }
 
@@ -296,14 +296,14 @@ wrap_r! {
 
 wrap_w! {
     pub trait Rst1rW {
-        fn srt(&mut self) -> tima::rst1r::SRT_W<REG>;
-        fn resync(&mut self) -> tima::rst1r::RESYNC_W<REG>;
-        fn per(&mut self) -> tima::rst1r::PER_W<REG>;
-        fn cmp(&mut self, cmp: Cmp) -> tima::rst1r::CMP_W<REG>;
-        fn mstper(&mut self) -> tima::rst1r::MSTPER_W<REG>;
-        fn mstcmp(&mut self, cmp: Cmp) -> tima::rst1r::MSTCMP_W<REG>;
-        fn extevnt(&mut self, e: ExtEvnt) -> tima::rst1r::EXTEVNT_W<REG>;
-        fn update(&mut self) -> tima::rst1r::UPDATE_W<REG>;
+        fn srt(&mut self) -> tima::rst1r::SRT_W<'_, REG>;
+        fn resync(&mut self) -> tima::rst1r::RESYNC_W<'_, REG>;
+        fn per(&mut self) -> tima::rst1r::PER_W<'_, REG>;
+        fn cmp(&mut self, cmp: Cmp) -> tima::rst1r::CMP_W<'_, REG>;
+        fn mstper(&mut self) -> tima::rst1r::MSTPER_W<'_, REG>;
+        fn mstcmp(&mut self, cmp: Cmp) -> tima::rst1r::MSTCMP_W<'_, REG>;
+        fn extevnt(&mut self, e: ExtEvnt) -> tima::rst1r::EXTEVNT_W<'_, REG>;
+        fn update(&mut self) -> tima::rst1r::UPDATE_W<'_, REG>;
     }
 }
 
@@ -320,12 +320,12 @@ wrap_r! {
 
 wrap_w! {
     pub trait RstrW {
-        fn updt(&mut self) -> tima::rstr::UPDT_W<REG>;
-        fn cmp2(&mut self) -> tima::rstr::CMP2_W<REG>;
-        fn cmp4(&mut self) -> tima::rstr::CMP2_W<REG>;
-        fn mstper(&mut self) -> tima::rstr::MSTPER_W<REG>;
-        fn mstcmp(&mut self, cmp: Cmp) -> tima::rstr::MSTCMP_W<REG>;
-        fn extevnt(&mut self, e: ExtEvnt) -> tima::rstr::EXTEVNT_W<REG>;
+        fn updt(&mut self) -> tima::rstr::UPDT_W<'_, REG>;
+        fn cmp2(&mut self) -> tima::rstr::CMP2_W<'_, REG>;
+        fn cmp4(&mut self) -> tima::rstr::CMP2_W<'_, REG>;
+        fn mstper(&mut self) -> tima::rstr::MSTPER_W<'_, REG>;
+        fn mstcmp(&mut self, cmp: Cmp) -> tima::rstr::MSTCMP_W<'_, REG>;
+        fn extevnt(&mut self, e: ExtEvnt) -> tima::rstr::EXTEVNT_W<'_, REG>;
     }
 }
 
@@ -342,14 +342,14 @@ mod reg {
         fn preen(r: &R<Self>) -> master::cr::PREEN_R;
     }
     pub trait MasterCrW: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
-        fn ckpsc(w: &mut W<Self>) -> master::cr::CKPSC_W<Self>;
-        fn cont(w: &mut W<Self>) -> master::cr::CONT_W<Self>;
-        fn retrig(w: &mut W<Self>) -> master::cr::RETRIG_W<Self>;
-        fn half(w: &mut W<Self>) -> master::cr::HALF_W<Self>;
-        fn syncrst(w: &mut W<Self>) -> master::cr::SYNCRST_W<Self>;
-        fn syncstrt(w: &mut W<Self>) -> master::cr::SYNCSTRT_W<Self>;
-        fn dacsync(w: &mut W<Self>) -> master::cr::DACSYNC_W<Self>;
-        fn preen(w: &mut W<Self>) -> master::cr::PREEN_W<Self>;
+        fn ckpsc(w: &mut W<Self>) -> master::cr::CKPSC_W<'_, Self>;
+        fn cont(w: &mut W<Self>) -> master::cr::CONT_W<'_, Self>;
+        fn retrig(w: &mut W<Self>) -> master::cr::RETRIG_W<'_, Self>;
+        fn half(w: &mut W<Self>) -> master::cr::HALF_W<'_, Self>;
+        fn syncrst(w: &mut W<Self>) -> master::cr::SYNCRST_W<'_, Self>;
+        fn syncstrt(w: &mut W<Self>) -> master::cr::SYNCSTRT_W<'_, Self>;
+        fn dacsync(w: &mut W<Self>) -> master::cr::DACSYNC_W<'_, Self>;
+        fn preen(w: &mut W<Self>) -> master::cr::PREEN_W<'_, Self>;
     }
 
     pub trait TimCrR: MasterCrR {
@@ -362,13 +362,13 @@ mod reg {
         fn updgat(r: &R<Self>) -> tima::cr::UPDGAT_R;
     }
     pub trait TimCrW: MasterCrW {
-        fn pshpll(w: &mut W<Self>) -> tima::cr::PSHPLL_W<Self>;
-        fn delcmp2(w: &mut W<Self>) -> tima::cr::DELCMP2_W<Self>;
-        fn delcmp4(w: &mut W<Self>) -> tima::cr::DELCMP4_W<Self>;
-        fn mstu(w: &mut W<Self>) -> tima::cr::MSTU_W<Self>;
-        fn trepu(w: &mut W<Self>) -> tima::cr::TREPU_W<Self>;
-        fn trstu(w: &mut W<Self>) -> tima::cr::TRSTU_W<Self>;
-        fn updgat(w: &mut W<Self>) -> tima::cr::UPDGAT_W<Self>;
+        fn pshpll(w: &mut W<Self>) -> tima::cr::PSHPLL_W<'_, Self>;
+        fn delcmp2(w: &mut W<Self>) -> tima::cr::DELCMP2_W<'_, Self>;
+        fn delcmp4(w: &mut W<Self>) -> tima::cr::DELCMP4_W<'_, Self>;
+        fn mstu(w: &mut W<Self>) -> tima::cr::MSTU_W<'_, Self>;
+        fn trepu(w: &mut W<Self>) -> tima::cr::TREPU_W<'_, Self>;
+        fn trstu(w: &mut W<Self>) -> tima::cr::TRSTU_W<'_, Self>;
+        fn updgat(w: &mut W<Self>) -> tima::cr::UPDGAT_W<'_, Self>;
     }
 
     pub trait CptcrW: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
@@ -382,9 +382,9 @@ mod reg {
         fn upd(r: &R<Self>) -> master::isr::UPD_R;
     }
     pub trait MasterIcr: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
-        fn cmpc(w: &mut W<Self>, n: u8) -> master::icr::CMPC_W<Self>;
-        fn repc(w: &mut W<Self>) -> master::icr::CMPC_W<Self>;
-        fn updc(w: &mut W<Self>) -> master::icr::CMPC_W<Self>;
+        fn cmpc(w: &mut W<Self>, n: u8) -> master::icr::CMPC_W<'_, Self>;
+        fn repc(w: &mut W<Self>) -> master::icr::CMPC_W<'_, Self>;
+        fn updc(w: &mut W<Self>) -> master::icr::CMPC_W<'_, Self>;
     }
     pub trait MasterDierR: RegisterSpec<Ux = u32> + Readable + Sized {
         fn cmpie(r: &R<Self>, n: u8) -> master::dier::CMPIE_R;
@@ -393,9 +393,9 @@ mod reg {
     }
 
     pub trait MasterDierW: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
-        fn cmpie(w: &mut W<Self>, n: u8) -> master::dier::CMPIE_W<Self>;
-        fn repie(w: &mut W<Self>) -> master::dier::REPIE_W<Self>;
-        fn updie(w: &mut W<Self>) -> master::dier::UPDIE_W<Self>;
+        fn cmpie(w: &mut W<Self>, n: u8) -> master::dier::CMPIE_W<'_, Self>;
+        fn repie(w: &mut W<Self>) -> master::dier::REPIE_W<'_, Self>;
+        fn updie(w: &mut W<Self>) -> master::dier::UPDIE_W<'_, Self>;
     }
 
     pub trait Set1rR: RegisterSpec<Ux = u32> + Readable + Sized {
@@ -409,14 +409,14 @@ mod reg {
         fn update(r: &R<Self>) -> tima::set1r::UPDATE_R;
     }
     pub trait Set1rW: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
-        fn sst(w: &mut W<Self>) -> tima::set1r::SST_W<Self>;
-        fn resync(w: &mut W<Self>) -> tima::set1r::RESYNC_W<Self>;
-        fn per(w: &mut W<Self>) -> tima::set1r::PER_W<Self>;
-        fn cmp(w: &mut W<Self>, n: u8) -> tima::set1r::CMP_W<Self>;
-        fn mstper(w: &mut W<Self>) -> tima::set1r::MSTPER_W<Self>;
-        fn mstcmp(w: &mut W<Self>, n: u8) -> tima::set1r::MSTCMP_W<Self>;
-        fn extevnt(w: &mut W<Self>, n: u8) -> tima::set1r::EXTEVNT_W<Self>;
-        fn update(w: &mut W<Self>) -> tima::set1r::UPDATE_W<Self>;
+        fn sst(w: &mut W<Self>) -> tima::set1r::SST_W<'_, Self>;
+        fn resync(w: &mut W<Self>) -> tima::set1r::RESYNC_W<'_, Self>;
+        fn per(w: &mut W<Self>) -> tima::set1r::PER_W<'_, Self>;
+        fn cmp(w: &mut W<Self>, n: u8) -> tima::set1r::CMP_W<'_, Self>;
+        fn mstper(w: &mut W<Self>) -> tima::set1r::MSTPER_W<'_, Self>;
+        fn mstcmp(w: &mut W<Self>, n: u8) -> tima::set1r::MSTCMP_W<'_, Self>;
+        fn extevnt(w: &mut W<Self>, n: u8) -> tima::set1r::EXTEVNT_W<'_, Self>;
+        fn update(w: &mut W<Self>) -> tima::set1r::UPDATE_W<'_, Self>;
     }
 
     pub trait Rst1rR: RegisterSpec<Ux = u32> + Readable + Sized {
@@ -430,14 +430,14 @@ mod reg {
         fn update(r: &R<Self>) -> tima::rst1r::UPDATE_R;
     }
     pub trait Rst1rW: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
-        fn srt(w: &mut W<Self>) -> tima::rst1r::SRT_W<Self>;
-        fn resync(w: &mut W<Self>) -> tima::rst1r::RESYNC_W<Self>;
-        fn per(w: &mut W<Self>) -> tima::rst1r::PER_W<Self>;
-        fn cmp(w: &mut W<Self>, n: u8) -> tima::rst1r::CMP_W<Self>;
-        fn mstper(w: &mut W<Self>) -> tima::rst1r::MSTPER_W<Self>;
-        fn mstcmp(w: &mut W<Self>, n: u8) -> tima::rst1r::MSTCMP_W<Self>;
-        fn extevnt(w: &mut W<Self>, n: u8) -> tima::rst1r::EXTEVNT_W<Self>;
-        fn update(w: &mut W<Self>) -> tima::rst1r::UPDATE_W<Self>;
+        fn srt(w: &mut W<Self>) -> tima::rst1r::SRT_W<'_, Self>;
+        fn resync(w: &mut W<Self>) -> tima::rst1r::RESYNC_W<'_, Self>;
+        fn per(w: &mut W<Self>) -> tima::rst1r::PER_W<'_, Self>;
+        fn cmp(w: &mut W<Self>, n: u8) -> tima::rst1r::CMP_W<'_, Self>;
+        fn mstper(w: &mut W<Self>) -> tima::rst1r::MSTPER_W<'_, Self>;
+        fn mstcmp(w: &mut W<Self>, n: u8) -> tima::rst1r::MSTCMP_W<'_, Self>;
+        fn extevnt(w: &mut W<Self>, n: u8) -> tima::rst1r::EXTEVNT_W<'_, Self>;
+        fn update(w: &mut W<Self>) -> tima::rst1r::UPDATE_W<'_, Self>;
     }
 
     pub trait RstrR: RegisterSpec<Ux = u32> + Readable + Sized {
@@ -449,12 +449,12 @@ mod reg {
         fn extevnt(r: &R<Self>, n: u8) -> tima::rstr::EXTEVNT_R;
     }
     pub trait RstrW: RegisterSpec<Ux = u32> + Writable + Resettable + Sized {
-        fn updt(w: &mut W<Self>) -> tima::rstr::UPDT_W<Self>;
-        fn cmp2(w: &mut W<Self>) -> tima::rstr::CMP2_W<Self>;
-        fn cmp4(w: &mut W<Self>) -> tima::rstr::CMP2_W<Self>;
-        fn mstper(w: &mut W<Self>) -> tima::rstr::MSTPER_W<Self>;
-        fn mstcmp(w: &mut W<Self>, n: u8) -> tima::rstr::MSTCMP_W<Self>;
-        fn extevnt(w: &mut W<Self>, n: u8) -> tima::rstr::EXTEVNT_W<Self>;
+        fn updt(w: &mut W<Self>) -> tima::rstr::UPDT_W<'_, Self>;
+        fn cmp2(w: &mut W<Self>) -> tima::rstr::CMP2_W<'_, Self>;
+        fn cmp4(w: &mut W<Self>) -> tima::rstr::CMP2_W<'_, Self>;
+        fn mstper(w: &mut W<Self>) -> tima::rstr::MSTPER_W<'_, Self>;
+        fn mstcmp(w: &mut W<Self>, n: u8) -> tima::rstr::MSTCMP_W<'_, Self>;
+        fn extevnt(w: &mut W<Self>, n: u8) -> tima::rstr::EXTEVNT_W<'_, Self>;
     }
 }
 
@@ -526,14 +526,14 @@ macro_rules! impl_master_ext {
         }
         impl reg::MasterCrW for $tim::cr::CRrs {
             impl_write! {
-                ckpsc -> master::cr::CKPSC_W<Self>;
-                cont -> master::cr::CONT_W<Self>;
-                retrig -> master::cr::RETRIG_W<Self>;
-                half -> master::cr::HALF_W<Self>;
-                syncrst -> master::cr::SYNCRST_W<Self>;
-                syncstrt -> master::cr::SYNCSTRT_W<Self>;
-                dacsync -> master::cr::DACSYNC_W<Self>;
-                preen -> master::cr::PREEN_W<Self>;
+                ckpsc -> master::cr::CKPSC_W<'_, Self>;
+                cont -> master::cr::CONT_W<'_, Self>;
+                retrig -> master::cr::RETRIG_W<'_, Self>;
+                half -> master::cr::HALF_W<'_, Self>;
+                syncrst -> master::cr::SYNCRST_W<'_, Self>;
+                syncstrt -> master::cr::SYNCSTRT_W<'_, Self>;
+                dacsync -> master::cr::DACSYNC_W<'_, Self>;
+                preen -> master::cr::PREEN_W<'_, Self>;
             }
         }
     };
@@ -593,13 +593,13 @@ macro_rules! impl_tim_ext {
         }
         impl reg::TimCrW for $tim::cr::CRrs {
             impl_write! {
-                pshpll -> tima::cr::PSHPLL_W<Self>;
-                delcmp2 -> tima::cr::DELCMP2_W<Self>;
-                delcmp4 -> tima::cr::DELCMP4_W<Self>;
-                mstu -> tima::cr::MSTU_W<Self>;
-                trepu -> tima::cr::TREPU_W<Self>;
-                trstu -> tima::cr::TRSTU_W<Self>;
-                updgat -> tima::cr::UPDGAT_W<Self>;
+                pshpll -> tima::cr::PSHPLL_W<'_, Self>;
+                delcmp2 -> tima::cr::DELCMP2_W<'_, Self>;
+                delcmp4 -> tima::cr::DELCMP4_W<'_, Self>;
+                mstu -> tima::cr::MSTU_W<'_, Self>;
+                trepu -> tima::cr::TREPU_W<'_, Self>;
+                trstu -> tima::cr::TRSTU_W<'_, Self>;
+                updgat -> tima::cr::UPDGAT_W<'_, Self>;
             }
         }
 
@@ -624,14 +624,14 @@ macro_rules! impl_tim_ext {
         }
         impl reg::Set1rW for $tim::set1r::SET1Rrs {
             impl_write! {
-                sst -> tima::set1r::SST_W<Self>;
-                resync -> tima::set1r::RESYNC_W<Self>;
-                per -> tima::set1r::PER_W<Self>;
-                cmp: n -> tima::set1r::CMP_W<Self>;
-                mstper -> tima::set1r::MSTPER_W<Self>;
-                mstcmp: n -> tima::set1r::MSTCMP_W<Self>;
-                extevnt: n -> tima::set1r::EXTEVNT_W<Self>;
-                update -> tima::set1r::UPDATE_W<Self>;
+                sst -> tima::set1r::SST_W<'_, Self>;
+                resync -> tima::set1r::RESYNC_W<'_, Self>;
+                per -> tima::set1r::PER_W<'_, Self>;
+                cmp: n -> tima::set1r::CMP_W<'_, Self>;
+                mstper -> tima::set1r::MSTPER_W<'_, Self>;
+                mstcmp: n -> tima::set1r::MSTCMP_W<'_, Self>;
+                extevnt: n -> tima::set1r::EXTEVNT_W<'_, Self>;
+                update -> tima::set1r::UPDATE_W<'_, Self>;
             }
         }
 
@@ -649,14 +649,14 @@ macro_rules! impl_tim_ext {
         }
         impl reg::Rst1rW for $tim::rst1r::RST1Rrs {
             impl_write! {
-                srt -> tima::rst1r::SRT_W<Self>;
-                resync -> tima::rst1r::RESYNC_W<Self>;
-                per -> tima::rst1r::PER_W<Self>;
-                cmp: n -> tima::rst1r::CMP_W<Self>;
-                mstper -> tima::rst1r::MSTPER_W<Self>;
-                mstcmp: n -> tima::rst1r::MSTCMP_W<Self>;
-                extevnt: n -> tima::rst1r::EXTEVNT_W<Self>;
-                update -> tima::rst1r::UPDATE_W<Self>;
+                srt -> tima::rst1r::SRT_W<'_, Self>;
+                resync -> tima::rst1r::RESYNC_W<'_, Self>;
+                per -> tima::rst1r::PER_W<'_, Self>;
+                cmp: n -> tima::rst1r::CMP_W<'_, Self>;
+                mstper -> tima::rst1r::MSTPER_W<'_, Self>;
+                mstcmp: n -> tima::rst1r::MSTCMP_W<'_, Self>;
+                extevnt: n -> tima::rst1r::EXTEVNT_W<'_, Self>;
+                update -> tima::rst1r::UPDATE_W<'_, Self>;
             }
         }
 
@@ -672,12 +672,12 @@ macro_rules! impl_tim_ext {
         }
         impl reg::RstrW for $tim::rstr::RSTRrs {
             impl_write! {
-                updt -> tima::rstr::UPDT_W<Self>;
-                cmp2 -> tima::rstr::CMP2_W<Self>;
-                cmp4 -> tima::rstr::CMP2_W<Self>;
-                mstper -> tima::rstr::MSTPER_W<Self>;
-                mstcmp: n -> tima::rstr::MSTCMP_W<Self>;
-                extevnt: n -> tima::rstr::EXTEVNT_W<Self>;
+                updt -> tima::rstr::UPDT_W<'_, Self>;
+                cmp2 -> tima::rstr::CMP2_W<'_, Self>;
+                cmp4 -> tima::rstr::CMP2_W<'_, Self>;
+                mstper -> tima::rstr::MSTPER_W<'_, Self>;
+                mstcmp: n -> tima::rstr::MSTCMP_W<'_, Self>;
+                extevnt: n -> tima::rstr::EXTEVNT_W<'_, Self>;
             }
         }
     };
@@ -703,9 +703,9 @@ macro_rules! impl_irq_ext {
 
         impl reg::MasterIcr for $tim::icr::ICRrs {
             impl_write! {
-                cmpc: n -> master::icr::CMPC_W<Self>;
-                repc -> master::icr::CMPC_W<Self>;
-                updc -> master::icr::CMPC_W<Self>;
+                cmpc: n -> master::icr::CMPC_W<'_, Self>;
+                repc -> master::icr::CMPC_W<'_, Self>;
+                updc -> master::icr::CMPC_W<'_, Self>;
             }
         }
 
@@ -718,9 +718,9 @@ macro_rules! impl_irq_ext {
         }
         impl reg::MasterDierW for $tim::dier::DIERrs {
             impl_write! {
-                cmpie: n -> master::dier::CMPIE_W<Self>;
-                repie -> master::dier::REPIE_W<Self>;
-                updie -> master::dier::UPDIE_W<Self>;
+                cmpie: n -> master::dier::CMPIE_W<'_, Self>;
+                repie -> master::dier::REPIE_W<'_, Self>;
+                updie -> master::dier::UPDIE_W<'_, Self>;
             }
         }
     };
