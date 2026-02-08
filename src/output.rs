@@ -136,7 +136,7 @@ impl State {
 /// Caller needs to ensure that this is only implemented
 /// for types that represent pin that can act as an output
 /// for the specified timer `TIM`
-pub unsafe trait ToHrOut<TIM, DacRst = NoDacTrigger, DacStp = NoDacTrigger>
+pub unsafe trait ToHrOut<TIM, PSCL, DacRst = NoDacTrigger, DacStp = NoDacTrigger>
 where
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
@@ -144,10 +144,10 @@ where
     type Out;
 }
 
-unsafe impl<TIM, PA, PB, DacRst, DacStp> ToHrOut<TIM, DacRst, DacStp> for (PA, PB)
+unsafe impl<TIM, PSCL, PA, PB, DacRst, DacStp> ToHrOut<TIM, PSCL, DacRst, DacStp> for (PA, PB)
 where
-    PA: ToHrOut<TIM, DacRst, DacStp>,
-    PB: ToHrOut<TIM, DacRst, DacStp>,
+    PA: ToHrOut<TIM, PSCL, DacRst, DacStp>,
+    PB: ToHrOut<TIM, PSCL, DacRst, DacStp>,
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
 {
@@ -168,6 +168,6 @@ pub type HrOut1<TIM, PSCL, DacRst = NoDacTrigger, DacStp = NoDacTrigger> =
 pub type HrOut2<TIM, PSCL, DacRst = NoDacTrigger, DacStp = NoDacTrigger> =
     HrOut<TIM, PSCL, Ch2, DacRst, DacStp>;
 
-unsafe impl<T> ToHrOut<T> for () {
+unsafe impl<T, PSCL> ToHrOut<T, PSCL> for () {
     type Out = ();
 }

@@ -219,7 +219,7 @@ pub trait HrPwmAdvExt: Sized {
         _pins: PINS,
     ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
-        PINS: ToHrOut<Self>;
+        PINS: ToHrOut<Self, PsclDefault>;
 }
 
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -595,7 +595,7 @@ impl<TIM: Instance + HrPwmAdvExt, PSCL, PINS, DacRst: DacResetTrigger, DacStp: D
     HrPwmBuilder<TIM, PSCL, TIM::PreloadSource, PINS, DacRst, DacStp>
 where
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<TIM>,
+    PINS: ToHrOut<TIM, PSCL>,
 {
     /// Set the prescaler; PWM count runs at base_frequency/(prescaler+1)
     pub fn prescaler<P>(
@@ -807,7 +807,7 @@ impl HrPwmAdvExt for HRTIM_MASTER {
         pins: PINS,
     ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
-        PINS: ToHrOut<HRTIM_MASTER>,
+        PINS: ToHrOut<HRTIM_MASTER, PsclDefault>,
     {
         // TODO: That 32x factor... Is that included below, or should we
         // do that? Also that will likely risk overflowing u32 since
@@ -848,7 +848,7 @@ impl<TIM: InstanceX> HrPwmAdvExt for TIM {
         pins: PINS,
     ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
     where
-        PINS: ToHrOut<TIM>,
+        PINS: ToHrOut<TIM, PsclDefault>,
     {
         // TODO: That 32x factor... Is that included below, or should we
         // do that? Also that will likely risk overflowing u32 since
@@ -884,7 +884,7 @@ impl<TIM: InstanceX> HrPwmAdvExt for TIM {
 impl<TIM: InstanceX, PSCL, PINS> HrPwmBuilder<TIM, PSCL, PreloadSource, PINS>
 where
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<TIM>,
+    PINS: ToHrOut<TIM, PSCL>,
 {
     pub fn with_fault_source<FS>(mut self, _fault_source: FS) -> Self
     where
@@ -980,7 +980,7 @@ macro_rules! hrtim_hal {
                 DacRst: DacResetTrigger,
                 DacStp: DacStepTrigger,
                 PSCL: HrtimPrescaler,
-                PINS: ToHrOut<$TIMX, DacRst, DacStp>,
+                PINS: ToHrOut<$TIMX, PSCL, DacRst, DacStp>,
             {
                 // For HAL writers:
                 // Make sure to connect gpios after calling this function and then it should be safe to
@@ -1013,7 +1013,7 @@ where
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<HRTIM_MASTER>,
+    PINS: ToHrOut<HRTIM_MASTER, PSCL>,
 {
     pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, PINS> {
         hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, []);
