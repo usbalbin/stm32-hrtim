@@ -141,7 +141,7 @@ where
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
 {
-    type Out<PSCL>;
+    type Out;
 }
 
 unsafe impl<TIM, PA, PB, DacRst, DacStp> ToHrOut<TIM, DacRst, DacStp> for (PA, PB)
@@ -151,7 +151,7 @@ where
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
 {
-    type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
+    type Out = (PA::Out, PB::Out);
 }
 
 // NOTE: Only HrOut1 can actually be used as a dac trigger
@@ -169,5 +169,5 @@ pub type HrOut2<TIM, PSCL, DacRst = NoDacTrigger, DacStp = NoDacTrigger> =
     HrOut<TIM, PSCL, Ch2, DacRst, DacStp>;
 
 unsafe impl<T> ToHrOut<T> for () {
-    type Out<PSCL> = ();
+    type Out = ();
 }
