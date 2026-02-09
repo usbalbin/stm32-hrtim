@@ -1,6 +1,6 @@
 [package]
 name = "stm32-hrtim"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "STM32 HRTIM peripheral driver"
 documentation = "https://docs.rs/stm32-hrtim"
@@ -31,9 +31,9 @@ hrtim_v1 = []
 hrtim_v1_1 = []
 hrtim_v2 = []
 
-stm32f3 = ["stm32f3/stm32f3x4"]
+stm32f3 = ["dep:stm32f3"]
 stm32h7 = ["dep:stm32h7"]
-stm32g4 = []
+stm32g4 = ["dep:stm32g4"]
 
 stm32f334 = ["stm32f3/stm32f3x4", "hrtim_v1"]
 

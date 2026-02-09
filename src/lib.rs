@@ -82,6 +82,7 @@ use core::mem::MaybeUninit;
 
 use crate::compare_register::{HrCr1, HrCr2, HrCr3, HrCr4};
 use crate::fault::{FaultAction, FaultSource};
+use crate::output::{HrOut1, HrOut2, Output1Pin, Output2Pin};
 use crate::timer::HrTim;
 #[cfg(feature = "hrtim_v2")]
 use pac::HRTIM_TIMF;
@@ -92,7 +93,6 @@ use capture::{HrCaptCh1, HrCaptCh2};
 use self::control::HrPwmControl;
 
 use self::deadtime::DeadtimeConfig;
-use self::output::ToHrOut;
 use self::timer_eev_cfg::EevCfgs;
 
 use timer::{Instance, InstanceX};
@@ -214,12 +214,14 @@ pub enum InterleavedMode {
 pub trait HrPwmAdvExt: Sized {
     type PreloadSource;
 
-    fn pwm_advanced<PINS>(
+    fn pwm_advanced<P1, P2>(
         self,
-        _pins: PINS,
-    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
+        pin1: P1,
+        pin2: P2,
+    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, P1, P2>
     where
-        PINS: ToHrOut<Self>;
+        P1: Output1Pin<Self>,
+        P2: Output2Pin<Self>;
 }
 
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -321,13 +323,15 @@ pub struct HrPwmBuilder<
     TIM,
     PSCL,
     PS,
-    PINS,
+    P1,
+    P2,
     DacRst: DacResetTrigger = NoDacTrigger,
     DacStp: DacStepTrigger = NoDacTrigger,
 > {
     _tim: PhantomData<TIM>,
     _prescaler: PhantomData<PSCL>,
-    pub pins: PINS,
+    pin1: P1,
+    pin2: P2,
     timer_mode: HrTimerMode,
     counting_direction: HrCountingDirection,
     //base_freq: HertzU64,
@@ -352,7 +356,6 @@ pub struct HrPwmBuilder<
 pub struct HrParts<
     TIM,
     PSCL,
-    OUT,
     DacRst: DacResetTrigger = NoDacTrigger,
     DacStp: DacStepTrigger = NoDacTrigger,
 > {
@@ -363,7 +366,8 @@ pub struct HrParts<
     pub cr3: HrCr3<TIM, PSCL>,
     pub cr4: HrCr4<TIM, PSCL>,
 
-    pub out: OUT,
+    pub out1: HrOut1<TIM, PSCL, DacRst, DacStp>,
+    pub out2: HrOut2<TIM, PSCL, DacRst, DacStp>,
     pub dma_channel: timer::DmaChannel<TIM>,
 }
 
@@ -591,24 +595,32 @@ macro_rules! hrtim_finalize_body {
     }};
 }
 
-impl<TIM: Instance + HrPwmAdvExt, PSCL, PINS, DacRst: DacResetTrigger, DacStp: DacStepTrigger>
-    HrPwmBuilder<TIM, PSCL, TIM::PreloadSource, PINS, DacRst, DacStp>
+impl<
+        TIM: Instance + HrPwmAdvExt,
+        PSCL,
+        P1,
+        P2,
+        DacRst: DacResetTrigger,
+        DacStp: DacStepTrigger,
+    > HrPwmBuilder<TIM, PSCL, TIM::PreloadSource, P1, P2, DacRst, DacStp>
 where
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<TIM>,
+    P1: Output1Pin<TIM>,
+    P2: Output2Pin<TIM>,
 {
     /// Set the prescaler; PWM count runs at base_frequency/(prescaler+1)
     pub fn prescaler<P>(
         self,
         _prescaler: P,
-    ) -> HrPwmBuilder<TIM, P, TIM::PreloadSource, PINS, DacRst, DacStp>
+    ) -> HrPwmBuilder<TIM, P, TIM::PreloadSource, P1, P2, DacRst, DacStp>
     where
         P: HrtimPrescaler,
     {
         let HrPwmBuilder {
             _tim,
             _prescaler: _,
-            pins,
+            pin1,
+            pin2,
             timer_mode,
             fault_enable_bits,
             fault1_bits,
@@ -638,7 +650,8 @@ where
         HrPwmBuilder {
             _tim,
             _prescaler: PhantomData,
-            pins,
+            pin1,
+            pin2,
             timer_mode,
             fault_enable_bits,
             fault1_bits,
@@ -748,11 +761,12 @@ where
         self,
         _rst: R,
         _step: S,
-    ) -> HrPwmBuilder<TIM, PSCL, TIM::PreloadSource, PINS, R, S> {
+    ) -> HrPwmBuilder<TIM, PSCL, TIM::PreloadSource, P1, P2, R, S> {
         let HrPwmBuilder {
             _tim,
             _prescaler: _,
-            pins,
+            pin1,
+            pin2,
             timer_mode,
             fault_enable_bits,
             fault1_bits,
@@ -776,7 +790,8 @@ where
         HrPwmBuilder {
             _tim,
             _prescaler: PhantomData,
-            pins,
+            pin1,
+            pin2,
             timer_mode,
             fault_enable_bits,
             fault1_bits,
@@ -802,12 +817,14 @@ where
 impl HrPwmAdvExt for HRTIM_MASTER {
     type PreloadSource = MasterPreloadSource;
 
-    fn pwm_advanced<PINS>(
+    fn pwm_advanced<P1, P2>(
         self,
-        pins: PINS,
-    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
+        pin1: P1,
+        pin2: P2,
+    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, P1, P2>
     where
-        PINS: ToHrOut<HRTIM_MASTER>,
+        P1: Output1Pin<Self>,
+        P2: Output2Pin<Self>,
     {
         // TODO: That 32x factor... Is that included below, or should we
         // do that? Also that will likely risk overflowing u32 since
@@ -817,7 +834,8 @@ impl HrPwmAdvExt for HRTIM_MASTER {
         HrPwmBuilder {
             _tim: PhantomData,
             _prescaler: PhantomData,
-            pins,
+            pin1,
+            pin2,
             timer_mode: HrTimerMode::Continuous,
             fault_enable_bits: 0b000000,
             fault1_bits: 0b00,
@@ -843,12 +861,14 @@ impl HrPwmAdvExt for HRTIM_MASTER {
 impl<TIM: InstanceX> HrPwmAdvExt for TIM {
     type PreloadSource = PreloadSource;
 
-    fn pwm_advanced<PINS>(
+    fn pwm_advanced<P1, P2>(
         self,
-        pins: PINS,
-    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, PINS>
+        pin1: P1,
+        pin2: P2,
+    ) -> HrPwmBuilder<Self, PsclDefault, Self::PreloadSource, P1, P2>
     where
-        PINS: ToHrOut<TIM>,
+        P1: Output1Pin<TIM>,
+        P2: Output2Pin<TIM>,
     {
         // TODO: That 32x factor... Is that included below, or should we
         // do that? Also that will likely risk overflowing u32 since
@@ -858,7 +878,8 @@ impl<TIM: InstanceX> HrPwmAdvExt for TIM {
         HrPwmBuilder {
             _tim: PhantomData,
             _prescaler: PhantomData,
-            pins,
+            pin1,
+            pin2,
             timer_mode: HrTimerMode::Continuous,
             fault_enable_bits: 0b000000,
             fault1_bits: 0b00,
@@ -881,10 +902,11 @@ impl<TIM: InstanceX> HrPwmAdvExt for TIM {
     }
 }
 
-impl<TIM: InstanceX, PSCL, PINS> HrPwmBuilder<TIM, PSCL, PreloadSource, PINS>
+impl<TIM: InstanceX, PSCL, P1, P2> HrPwmBuilder<TIM, PSCL, PreloadSource, P1, P2>
 where
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<TIM>,
+    P1: Output1Pin<TIM>,
+    P2: Output2Pin<TIM>,
 {
     pub fn with_fault_source<FS>(mut self, _fault_source: FS) -> Self
     where
@@ -974,20 +996,21 @@ where
 macro_rules! hrtim_hal {
     ($($TIMX:ident: $($out:ident)*,)+) => {
         $(
-            impl<PSCL, PINS, DacRst, DacStp>
-                HrPwmBuilder<$TIMX, PSCL, PreloadSource, PINS, DacRst, DacStp>
+            impl<PSCL, P1, P2, DacRst, DacStp>
+                HrPwmBuilder<$TIMX, PSCL, PreloadSource, P1, P2, DacRst, DacStp>
             where
                 DacRst: DacResetTrigger,
                 DacStp: DacStepTrigger,
                 PSCL: HrtimPrescaler,
-                PINS: ToHrOut<$TIMX, DacRst, DacStp>,
+                P1: Output1Pin<$TIMX>,
+                P2: Output2Pin<$TIMX>,
             {
                 // For HAL writers:
                 // Make sure to connect gpios after calling this function and then it should be safe to
                 // conjure an instance of HrParts<$TIMX, PSCL, PINS::Out<PSCL>>
-                pub fn _init(self, _control: &mut HrPwmControl) -> PINS {
+                pub fn _init(self, _control: &mut HrPwmControl) -> (P1, P2) {
                     hrtim_finalize_body!(self, PreloadSource, $TIMX, [$($out)*]);
-                    self.pins
+                    (self.pin1, self.pin2)
                 }
             }
         )+
@@ -1007,15 +1030,16 @@ hrtim_hal! {
     HRTIM_TIMF: out,
 }
 
-impl<PSCL, PINS, DacRst, DacStp>
-    HrPwmBuilder<HRTIM_MASTER, PSCL, MasterPreloadSource, PINS, DacRst, DacStp>
+impl<PSCL, P1, P2, DacRst, DacStp>
+    HrPwmBuilder<HRTIM_MASTER, PSCL, MasterPreloadSource, P1, P2, DacRst, DacStp>
 where
     DacRst: DacResetTrigger,
     DacStp: DacStepTrigger,
     PSCL: HrtimPrescaler,
-    PINS: ToHrOut<HRTIM_MASTER>,
+    P1: Output1Pin<HRTIM_MASTER>,
+    P2: Output1Pin<HRTIM_MASTER>,
 {
-    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL, PINS> {
+    pub fn finalize(self, _control: &mut HrPwmControl) -> HrParts<HRTIM_MASTER, PSCL> {
         hrtim_finalize_body!(self, MasterPreloadSource, HRTIM_MASTER, []);
 
         unsafe { MaybeUninit::uninit().assume_init() }

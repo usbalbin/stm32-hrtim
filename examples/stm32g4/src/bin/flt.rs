@@ -11,7 +11,7 @@ use stm32_hrtim::{
     HrParts, HrPwmAdvExt, Polarity, Pscl4,
     compare_register::HrCompareRegister,
     fault::{FaultAction, FaultMonitor},
-    output::HrOutput,
+    output::{self, HrOutput},
     timer::HrTimer,
 };
 use stm32g4xx_hal::{
@@ -78,11 +78,11 @@ fn main() -> ! {
     let HrParts {
         mut timer,
         mut cr1,
-        mut out,
+        mut out1,
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced(pin_a)
+        .pwm_advanced(pin_a, output::NoPin)
         .prescaler(prescaler)
         .period(0xFFFF)
         .with_fault_source(fault_source3)
@@ -90,11 +90,11 @@ fn main() -> ! {
         .fault_action2(FaultAction::ForceInactive)
         .finalize(&mut hr_control);
 
-    out.enable_rst_event(&cr1); // Set low on compare match with cr1
-    out.enable_set_event(&timer); // Set high at new period
+    out1.enable_rst_event(&cr1); // Set low on compare match with cr1
+    out1.enable_set_event(&timer); // Set high at new period
     cr1.set_duty(timer.get_period() / 3);
 
-    out.enable();
+    out1.enable();
     timer.start(&mut hr_control.control);
 
     defmt::info!("Started");
@@ -102,11 +102,11 @@ fn main() -> ! {
     loop {
         for _ in 0..5 {
             delay.delay(500_u32.millis());
-            defmt::info!("State: {:?}", out.get_state());
+            defmt::info!("State: {:?}", out1.get_state());
         }
         if hr_control.fault_3.is_fault_active() {
             hr_control.fault_3.clear_fault(); // Clear fault every 5s
-            out.enable();
+            out1.enable();
             defmt::info!("failt cleared, and output reenabled");
         }
     }

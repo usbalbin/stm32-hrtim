@@ -132,27 +132,21 @@ impl State {
     }
 }
 
-/// # Safety
-/// Caller needs to ensure that this is only implemented
-/// for types that represent pin that can act as an output
-/// for the specified timer `TIM`
-pub unsafe trait ToHrOut<TIM, DacRst = NoDacTrigger, DacStp = NoDacTrigger>
-where
-    DacRst: DacResetTrigger,
-    DacStp: DacStepTrigger,
-{
-    type Out<PSCL>;
-}
+#[derive(Debug, PartialEq, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct NoPin;
 
-unsafe impl<TIM, PA, PB, DacRst, DacStp> ToHrOut<TIM, DacRst, DacStp> for (PA, PB)
-where
-    PA: ToHrOut<TIM, DacRst, DacStp>,
-    PB: ToHrOut<TIM, DacRst, DacStp>,
-    DacRst: DacResetTrigger,
-    DacStp: DacStepTrigger,
-{
-    type Out<PSCL> = (PA::Out<PSCL>, PB::Out<PSCL>);
-}
+/// # Safety
+/// Implementer needs to ensure that this is only implemented
+/// for types that represent pin that can act as an output1
+/// for the specified timer `TIM`
+pub unsafe trait Output1Pin<TIM> {}
+
+/// # Safety
+/// Implementer needs to ensure that this is only implemented
+/// for types that represent pin that can act as an output1
+/// for the specified timer `TIM`
+pub unsafe trait Output2Pin<TIM> {}
 
 // NOTE: Only HrOut1 can actually be used as a dac trigger
 
@@ -168,6 +162,5 @@ pub type HrOut1<TIM, PSCL, DacRst = NoDacTrigger, DacStp = NoDacTrigger> =
 pub type HrOut2<TIM, PSCL, DacRst = NoDacTrigger, DacStp = NoDacTrigger> =
     HrOut<TIM, PSCL, Ch2, DacRst, DacStp>;
 
-unsafe impl<T> ToHrOut<T> for () {
-    type Out<PSCL> = ();
-}
+unsafe impl<T> Output1Pin<T> for NoPin {}
+unsafe impl<T> Output2Pin<T> for NoPin {}
