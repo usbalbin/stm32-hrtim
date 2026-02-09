@@ -269,14 +269,14 @@ impl<'a> From<&'a mut HrPwmControl> for &'a mut HrPwmCtrl {
 #[non_exhaustive]
 pub struct HrPwmCtrl;
 
-pub struct Foo<'a>(&'a mut pac::hrtim_master::cr::W);
+pub struct W<'a>(&'a mut pac::hrtim_master::cr::W);
 
-impl<'a> Foo<'a> {
+impl<'a> W<'a> {
     pub fn start<T: HrTimer>(self, _t: &mut T) -> Self {
         use crate::timer::Instance;
 
         let w = self.0;
-        Foo(match T::Timer::TIMX {
+        W(match T::Timer::TIMX {
             timer::Timer::Master => w.mcen().set_bit(),
             timer::Timer::Tim(v) => w.tcen(v as _).set_bit(),
         })
@@ -285,7 +285,7 @@ impl<'a> Foo<'a> {
         use crate::timer::Instance;
 
         let w = self.0;
-        Foo(match T::Timer::TIMX {
+        W(match T::Timer::TIMX {
             timer::Timer::Master => w.mcen().clear_bit(),
             timer::Timer::Tim(v) => w.tcen(v as _).clear_bit(),
         })
@@ -305,9 +305,9 @@ impl HrPwmCtrl {
     ///     .stop(&mut timer_c)
     /// );
     /// ```
-    pub fn start_stop_timers(&mut self, p: impl FnOnce(Foo) -> Foo) {
+    pub fn start_stop_timers(&mut self, p: impl FnOnce(W) -> W) {
         let master = unsafe { pac::HRTIM_MASTER::steal() };
-        master.cr().modify(|_, w| p(Foo(w)).0);
+        master.cr().modify(|_, w| p(W(w)).0);
     }
 }
 
@@ -350,7 +350,7 @@ pub struct HrPwmControl {
 
 #[cfg(feature = "stm32g4")]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[derive(Debug, Clone, Copy)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AdcTriggerPostscaler {
     None = 0,
     Div2 = 1,
