@@ -28,3 +28,48 @@ This crate is being developed and lots of things are still subject to change. It
 
 ### Usage
 This driver is intended for use through a device hal library. See [stm32g4xx-hal](https://github.com/stm32-rs/stm32g4xx-hal/) as a reference.
+
+```rust
+//        .               .               .               .
+//        .  30%          .               .               .
+//         ----           .               .----           .
+//out1    |    |          .               |    |          .
+//        |    |          .               |    |          .
+// --------    ----------------------------    --------------------
+//        .               .----           .               .----
+//out2    .               |    |          .               |    |
+//        .               |    |          .               |    |
+// ------------------------    ----------------------------    ----
+//        .               .               .               .
+//        .               .               .               .
+let (hr_control, ..) = dp.HRTIM_COMMON.hr_control(&mut rcc).wait_for_calibration();
+let mut hr_control = hr_control.constrain();
+
+let HrParts {
+    mut timer,
+    mut cr1,
+    mut out1,
+    mut out2,
+    ..
+} = dp
+    .HRTIM_TIMA
+    .pwm_advanced(pin_a, pin_b)
+    .prescaler(prescaler)
+    .period(0xFFFF)
+    .push_pull_mode(true) // Set push pull mode, out1 and out2 are
+    // alternated every period with one being
+    // inactive and the other getting to output its wave form
+    // as normal
+    .finalize(&mut hr_control);
+
+out1.enable_rst_event(&cr1); // Set low on compare match with cr1
+out2.enable_rst_event(&cr1);
+
+out1.enable_set_event(&timer); // Set high at new period
+out2.enable_set_event(&timer);
+
+out1.enable();
+out2.enable();
+
+timer.start(&mut hr_control.control);
+```
