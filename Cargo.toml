@@ -3,7 +3,9 @@ name = "stm32-hrtim"
 version = "0.1.0"
 edition = "2021"
 description = "STM32 HRTIM peripheral driver"
+documentation = "https://docs.rs/stm32-hrtim"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/usbalbin/stm32-hrtim"
 
 [package.metadata.docs.rs]
 features = ["stm32g474", "defmt"]
