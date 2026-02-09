@@ -8,7 +8,7 @@ use panic_probe as _;
 use stm32_hrtim::{
     HrParts, HrPwmAdvExt, HrTimerMode, MasterPreloadSource, PreloadSource, Pscl4,
     compare_register::HrCompareRegister,
-    output::HrOutput,
+    output::{self, HrOutput},
     timer::{HrSlaveTimer, HrTimer},
 };
 use stm32g4xx_hal::{
@@ -68,11 +68,12 @@ fn main() -> ! {
     let HrParts {
         mut timer,
         mut cr1,
-        out: (mut out1, mut out2),
+        mut out1,
+        mut out2,
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced((pin_a, pin_b))
+        .pwm_advanced(pin_a, pin_b)
         .prescaler(prescaler)
         .push_pull_mode(true) // Set push pull mode, out1 and out2 are
         // alternated every period with one being
@@ -88,7 +89,7 @@ fn main() -> ! {
         ..
     } = dp
         .HRTIM_MASTER
-        .pwm_advanced(())
+        .pwm_advanced(output::NoPin, output::NoPin)
         .prescaler(prescaler)
         .preload(MasterPreloadSource::OnMasterRepetitionUpdate)
         .period(0xFFFF)

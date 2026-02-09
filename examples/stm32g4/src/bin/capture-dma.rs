@@ -10,7 +10,7 @@ use stm32_hrtim::{
     HrParts, HrPwmAdvExt, Pscl128, capture,
     compare_register::HrCompareRegister,
     external_event::{self, ToExternalEventSource},
-    output::HrOutput,
+    output::{self, HrOutput},
     timer::{HrSlaveTimerCpt, HrTimer, TimerSplitCapture},
 };
 use stm32g4xx_hal::{
@@ -83,12 +83,12 @@ fn main() -> ! {
     let HrParts {
         timer,
         mut cr1,
-        out: mut out1,
+        mut out1,
         dma_channel,
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced(pin_a)
+        .pwm_advanced(pin_a, output::NoPin)
         .prescaler(prescaler)
         .period(period)
         .finalize(&mut hr_control);

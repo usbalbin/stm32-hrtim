@@ -15,7 +15,7 @@ cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 defmt-rtt = "0.4.0"
 cortex-m-rt = "0.7.2"
 panic-probe = { version = "0.3.0", features = ["print-defmt"] }
-stm32g4xx-hal = { git = "https://github.com/usbalbin/stm32g4xx-hal", branch = "hrtim", features = ["defmt", "hrtim"] }
+stm32g4xx-hal = { git = "https://github.com/usbalbin/stm32g4xx-hal", branch = "update-hrtim", features = ["defmt", "hrtim"] }
 stm32-hrtim = { path = "../../", features = ["defmt"] }
 defmt = "1.0.1"
 fugit = "0.3.7"

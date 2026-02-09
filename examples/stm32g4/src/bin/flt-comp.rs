@@ -12,7 +12,7 @@ use stm32_hrtim::{
     HrParts, HrPwmAdvExt, Polarity, Pscl4,
     compare_register::HrCompareRegister,
     fault::{FaultAction, FaultMonitor},
-    output::HrOutput,
+    output::{self, HrOutput},
     timer::HrTimer,
 };
 use stm32g4xx_hal::{
@@ -109,11 +109,11 @@ fn main() -> ! {
     let HrParts {
         mut timer,
         mut cr1,
-        out: mut out1,
+        mut out1,
         ..
     } = dp
         .HRTIM_TIMA
-        .pwm_advanced(pin_a)
+        .pwm_advanced(pin_a, output::NoPin)
         .prescaler(prescaler)
         .period(0xFFFF)
         .with_fault_source(fault_source5) // Set fault source
